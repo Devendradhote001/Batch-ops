@@ -6,6 +6,7 @@ import { AdminBatchesPage } from '@/features/batches/pages/AdminBatchesPage';
 import { BatchDetailPage } from '@/features/batches/pages/BatchDetailPage';
 import { BatchesPage } from '@/features/batches/pages/BatchesPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { UsersPage } from '@/features/users/pages/UsersPage';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -23,10 +24,7 @@ export const router = createBrowserRouter(
             { index: true, element: <DashboardPage /> },
             { path: 'batches', element: <BatchesPage /> },
             { path: 'batches/:batchId', element: <BatchDetailPage /> },
-            {
-              path: 'sessions',
-              element: <ComingSoonPage title="Sessions" description="Every session logged across batches, by day." phase={3} />,
-            },
+            { path: 'sessions', element: <SessionsPage /> },
             {
               element: <RequireRole roles={['admin', 'viewer']} />,
               children: [

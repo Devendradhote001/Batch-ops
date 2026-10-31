@@ -69,6 +69,15 @@ export async function listBatches(user: AuthUser, query: ListBatchesQuery) {
   return { items: await withStats(items), meta: buildMeta(query, total) };
 }
 
+/** Non-archived batches the user can see, with only what pickers need. */
+export function listBatchOptions(user: AuthUser) {
+  return Batch.find({ isArchived: false, ...visibilityFilter(user) })
+    .select('name code status studentCount instructors modules._id modules.title')
+    .populate('instructors', 'name avatarColor role isActive')
+    .sort({ name: 1 })
+    .lean();
+}
+
 export async function getBatch(user: AuthUser, id: string) {
   const batch = await populateBatch(Batch.findOne({ _id: id, ...visibilityFilter(user) }))
     .select('-__v')

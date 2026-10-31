@@ -13,7 +13,8 @@ import {
 /** Mounted at /api/batches — any authenticated user (instructors are scoped in the service). */
 export const batchRoutes = Router();
 batchRoutes.get('/', validate({ query: listBatchesQuery }), controller.list);
-batchRoutes.get('/:id', validate({ params: idParams }), controller.get);
+batchRoutes.get('/options', controller.options);
+batchRoutes.get('/:id',validate({ params: idParams }), controller.get);
 
 /** Mounted at /api/admin/batches — admin only. */
 export const adminBatchRoutes = Router();

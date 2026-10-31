@@ -11,6 +11,7 @@ import {
   Layers,
   ListChecks,
   Pencil,
+  Plus,
   TrendingUp,
   Users,
 } from 'lucide-react';
@@ -29,6 +30,9 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StatCard } from '@/components/ui/StatCard';
 import { useAuthUser } from '@/features/auth/api';
+import { SessionTimeline } from '@/features/sessions/components/SessionTimeline';
+import { canLogToBatch } from '@/features/sessions/permissions';
+import { useSessionActions } from '@/features/sessions/useSessionActions';
 import { getErrorMessage } from '@/lib/api';
 import { useArchiveBatch, useBatch } from '../api';
 import { BatchFormModal } from '../components/BatchFormModal';
@@ -71,6 +75,8 @@ function BatchDetail({ batch }: { batch: Batch }) {
   const archive = useArchiveBatch();
   const [editing, setEditing] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const sessionActions = useSessionActions();
+  const canLog = !batch.isArchived && canLogToBatch(user, batch);
   const { stats } = batch;
 
   const toggleArchive = () =>
@@ -140,10 +146,20 @@ function BatchDetail({ batch }: { batch: Batch }) {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Sessions</CardTitle>
+              {canLog && (
+                <Button variant="secondary" size="sm" onClick={() => sessionActions.log({ batchId: batch._id })}>
+                  <Plus className="size-3.5" /> Log session
+                </Button>
+              )}
             </CardHeader>
-            <EmptyState icon={CalendarClock} title="Session timeline arrives in Phase 3" description="Sessions logged for this batch will be grouped by day here." className="py-10" />
+            <SessionTimeline
+              batchId={batch._id}
+              onEdit={sessionActions.edit}
+              onDelete={sessionActions.remove}
+              emptyAction={canLog && <Button onClick={() => sessionActions.log({ batchId: batch._id })}>Log the first session</Button>}
+            />
           </Card>
 
           <Card>
@@ -202,6 +218,7 @@ function BatchDetail({ batch }: { batch: Batch }) {
         </div>
       </div>
 
+      {sessionActions.dialogs}
       {isAdmin && (
         <>
           <BatchFormModal open={editing} onClose={() => setEditing(false)} batch={batch} />

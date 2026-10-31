@@ -1,4 +1,4 @@
-import type { BatchStatus, Role } from './constants';
+import type { BatchStatus, Role, SessionStatus, SessionType } from './constants';
 
 export interface PaginationMeta {
   page: number;
@@ -87,4 +87,41 @@ export interface Batch {
   createdAt: string;
   updatedAt: string;
   stats: BatchStats;
+}
+
+/** Lightweight batch for pickers: just what the session form needs. */
+export interface BatchOption {
+  _id: string;
+  name: string;
+  code: string;
+  status: BatchStatus;
+  studentCount: number;
+  instructors: UserSummary[];
+  modules: { _id: string; title: string }[];
+}
+
+export interface Session {
+  _id: string;
+  batch: { _id: string; name: string; code: string; studentCount: number };
+  /** YYYY-MM-DD (IST calendar day) */
+  day: string;
+  title: string;
+  topic: string;
+  instructor: UserSummary;
+  type: SessionType;
+  durationMinutes: number;
+  attendanceCount: number;
+  status: SessionStatus;
+  notes: string;
+  recordingLink: string;
+  createdBy: { _id: string; name: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SessionCalendarDay {
+  day: string;
+  count: number;
+  completed: number;
+  minutes: number;
 }

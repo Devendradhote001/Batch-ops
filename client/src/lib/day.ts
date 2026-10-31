@@ -15,6 +15,16 @@ export function nowIST() {
   return dayjs().tz(APP_TIMEZONE);
 }
 
+/** Today in IST as YYYY-MM-DD. */
+export function todayIST() {
+  return nowIST().format('YYYY-MM-DD');
+}
+
+/** Shift a YYYY-MM-DD day by n days. */
+export function shiftDay(day: string, n: number) {
+  return dayjs(day).add(n, 'day').format('YYYY-MM-DD');
+}
+
 export function formatDateTime(value: string | Date) {
   return dayjs(value).tz(APP_TIMEZONE).format('D MMM YYYY, h:mm A');
 }

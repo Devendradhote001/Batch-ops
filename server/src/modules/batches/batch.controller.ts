@@ -11,6 +11,10 @@ export async function list(req: Request, res: Response) {
   sendSuccess(res, items, { meta });
 }
 
+export async function options(req: Request, res: Response) {
+  sendSuccess(res, await batchService.listBatchOptions(getAuthUser(req)));
+}
+
 export async function get(req: Request<IdParams>, res: Response) {
   sendSuccess(res, await batchService.getBatch(getAuthUser(req), req.params.id));
 }

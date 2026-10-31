@@ -73,7 +73,10 @@ client/src/
 | Users   | `GET /api/users/options?roles=`                                                                                   | signed in                       |
 |         | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                      | admin                           |
 | Batches | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id`                                      | signed in (instructors: own)    |
+|         | `GET /api/batches/options` (non-archived, for pickers)                                                            | signed in (instructors: own)    |
 |         | `POST /api/admin/batches` · `PUT /:id` · `PATCH /:id/archive` · `PATCH /:id/modules/:moduleId`                     | admin                           |
+| Sessions| `GET /api/sessions?day&from&to&batch&instructor&status&type&page` · `GET /calendar?month=` · `GET /:id`           | signed in (instructors: own batches) |
+|         | `POST /api/sessions` · `PUT /:id` · `DELETE /:id`                                                                 | admin: any · instructor: own, on assigned batches |
 
 ## Key decisions
 
@@ -93,6 +96,9 @@ client/src/
   `CLIENT_ORIGIN` and `VITE_API_URL` accordingly.
 - **Batch dates are day strings.** `startDate`/`endDate` are stored as `YYYY-MM-DD` like other day fields, since a
   batch's dates have no time of day. Batch progress = completed sessions ÷ `totalPlannedSessions`.
+- **Session rules.** Instructors always log as themselves (any `instructor` in the body is ignored), only on
+  batches they're assigned to, and can edit or delete only sessions they took. Admins can log for any instructor
+  assigned to the batch. Sessions can't be dated in the future or logged to archived batches.
 - **Activity log.** Mutations write a pre-rendered summary ("Asha created batch MERN-OCT-26") to `activities`,
   which feeds the dashboard's recent-activity list without joins. Logging failures never fail the request.
 - **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
@@ -102,7 +108,7 @@ client/src/
 
 - [x] Phase 1 — setup, auth + RBAC, admin seed, login, layout shell
 - [x] Phase 2 — users admin, batches CRUD, batch detail
-- [ ] Phase 3 — sessions
+- [x] Phase 3 — sessions
 - [ ] Phase 4 — daily updates, events
 - [ ] Phase 5 — dashboard, analytics
 - [ ] Phase 6 — polish, full demo seed
