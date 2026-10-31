@@ -2,7 +2,11 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ProfilePage } from '@/features/auth/pages/ProfilePage';
+import { AdminBatchesPage } from '@/features/batches/pages/AdminBatchesPage';
+import { BatchDetailPage } from '@/features/batches/pages/BatchDetailPage';
+import { BatchesPage } from '@/features/batches/pages/BatchesPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { UsersPage } from '@/features/users/pages/UsersPage';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireAuth, RequireRole } from '@/routes/guards';
@@ -17,14 +21,8 @@ export const router = createBrowserRouter(
           element: <AppShell />,
           children: [
             { index: true, element: <DashboardPage /> },
-            {
-              path: 'batches',
-              element: <ComingSoonPage title="Batches" description="All batches, their progress and syllabus." phase={2} />,
-            },
-            {
-              path: 'batches/:batchId',
-              element: <ComingSoonPage title="Batch" description="Batch details, sessions and events." phase={2} />,
-            },
+            { path: 'batches', element: <BatchesPage /> },
+            { path: 'batches/:batchId', element: <BatchDetailPage /> },
             {
               path: 'sessions',
               element: <ComingSoonPage title="Sessions" description="Every session logged across batches, by day." phase={3} />,
@@ -52,14 +50,8 @@ export const router = createBrowserRouter(
               element: <RequireRole roles={['admin']} />,
               children: [
                 { index: true, element: <Navigate to="users" replace /> },
-                {
-                  path: 'users',
-                  element: <ComingSoonPage title="Users" description="Create and manage instructor and viewer accounts." phase={2} />,
-                },
-                {
-                  path: 'batches',
-                  element: <ComingSoonPage title="Manage batches" description="Create, edit and archive batches." phase={2} />,
-                },
+                { path: 'users', element: <UsersPage /> },
+                { path: 'batches', element: <AdminBatchesPage /> },
               ],
             },
           ],

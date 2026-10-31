@@ -67,6 +67,14 @@ client/src/
 - Every body/query is validated with Zod; validation failures return `400 VALIDATION_ERROR`.
 - Admin-only endpoints live under `/api/admin/*`, which requires `authenticate` + `authorize('admin')`.
 
+| Area    | Endpoints                                                                                                         | Access                          |
+| ------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| Auth    | `POST /api/auth/login` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password`                       | public / signed in              |
+| Users   | `GET /api/users/options?roles=`                                                                                   | signed in                       |
+|         | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                      | admin                           |
+| Batches | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id`                                      | signed in (instructors: own)    |
+|         | `POST /api/admin/batches` · `PUT /:id` · `PATCH /:id/archive` · `PATCH /:id/modules/:moduleId`                     | admin                           |
+
 ## Key decisions
 
 - **Auth via httpOnly cookies.** A 15-minute access token and a 7-day refresh token, both httpOnly and
@@ -83,13 +91,17 @@ client/src/
 - **Same-origin API in development.** Vite proxies `/api` to the server, so cookies work without
   cross-site configuration. In production, serve the client and API from the same site or set
   `CLIENT_ORIGIN` and `VITE_API_URL` accordingly.
+- **Batch dates are day strings.** `startDate`/`endDate` are stored as `YYYY-MM-DD` like other day fields, since a
+  batch's dates have no time of day. Batch progress = completed sessions ÷ `totalPlannedSessions`.
+- **Activity log.** Mutations write a pre-rendered summary ("Asha created batch MERN-OCT-26") to `activities`,
+  which feeds the dashboard's recent-activity list without joins. Logging failures never fail the request.
 - **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
   Users are deactivated, never deleted, so history stays intact.
 
 ## Build status
 
 - [x] Phase 1 — setup, auth + RBAC, admin seed, login, layout shell
-- [ ] Phase 2 — users admin, batches CRUD, batch detail
+- [x] Phase 2 — users admin, batches CRUD, batch detail
 - [ ] Phase 3 — sessions
 - [ ] Phase 4 — daily updates, events
 - [ ] Phase 5 — dashboard, analytics

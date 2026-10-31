@@ -1,5 +1,5 @@
 import axios, { isAxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import type { ApiFailure, ApiSuccess } from '@batchops/shared';
+import type { ApiFailure, ApiSuccess, PaginationMeta } from '@batchops/shared';
 import { queryClient, queryKeys } from './queryClient';
 
 export const api = axios.create({
@@ -45,6 +45,17 @@ api.interceptors.response.use(
 export async function unwrap<T>(request: Promise<AxiosResponse<ApiSuccess<T>>>): Promise<T> {
   const response = await request;
   return response.data.data;
+}
+
+export interface Page<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+/** Returns a list endpoint's rows together with its pagination meta. */
+export async function unwrapPage<T>(request: Promise<AxiosResponse<ApiSuccess<T[]>>>): Promise<Page<T>> {
+  const { data } = await request;
+  return { items: data.data, meta: data.meta! };
 }
 
 export function getErrorCode(error: unknown): string | undefined {
