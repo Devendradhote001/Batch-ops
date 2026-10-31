@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
@@ -20,9 +22,34 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
   app.use('/api', apiRouter);
+  if (env.serveClient) serveClient(app);
 
   app.use(notFound);
   app.use(errorHandler);
 
   return app;
+}
+
+/**
+ * Serves the built SPA from the same origin as the API (so auth cookies stay first-party).
+ * Both src/app.ts and the bundled dist/server.js sit two levels below the repo root.
+ */
+function serveClient(app: express.Express) {
+  const clientDist = fileURLToPath(new URL('../../client/dist', import.meta.url));
+  const indexHtml = `${clientDist}/index.html`;
+  if (!existsSync(indexHtml)) {
+    console.warn(`SERVE_CLIENT is on but ${indexHtml} is missing — run "npm run build" first.`);
+    return;
+  }
+
+  // Hashed assets never change, so cache them for a year; everything else revalidates.
+  app.use('/assets', express.static(`${clientDist}/assets`, { immutable: true, maxAge: '1y', index: false }));
+  app.use(express.static(clientDist, { index: false, maxAge: 0 }));
+
+  // Client-side routes: any other GET/HEAD outside /api gets the app shell.
+  app.use((req, res, next) => {
+    if ((req.method !== 'GET' && req.method !== 'HEAD') || req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(indexHtml);
+  });
 }

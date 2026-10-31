@@ -13,20 +13,7 @@
       rel="stylesheet"
     />
     <title>BatchOps</title>
-    <script>
-      // Apply the saved theme before first paint to avoid a light/dark flash.
-      (function () {
-        var theme;
-        try {
-          theme = localStorage.getItem('bo-theme');
-        } catch (e) {}
-        if (theme !== 'light' && theme !== 'dark') {
-          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        document.documentElement.style.colorScheme = theme;
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

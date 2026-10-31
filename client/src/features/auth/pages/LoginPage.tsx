@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import { getErrorMessage } from '@/lib/api';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useCurrentUser, useLogin } from '../api';
 import { loginSchema, type LoginValues } from '../schemas';
 
@@ -18,6 +19,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  useDocumentTitle('Sign in');
 
   const from = (location.state as { from?: Location } | null)?.from;
   const redirectTo = from ? `${from.pathname}${from.search}` : '/';

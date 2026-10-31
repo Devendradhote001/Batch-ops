@@ -36,6 +36,7 @@ import { SessionTimeline } from '@/features/sessions/components/SessionTimeline'
 import { canLogToBatch } from '@/features/sessions/permissions';
 import { useSessionActions } from '@/features/sessions/useSessionActions';
 import { getErrorMessage } from '@/lib/api';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useArchiveBatch, useBatch } from '../api';
 import { BatchFormModal } from '../components/BatchFormModal';
 import { BatchStatusBadge } from '../components/BatchStatusBadge';
@@ -45,6 +46,7 @@ import { formatDay, formatScheduleDays, formatTime } from '../meta';
 export function BatchDetailPage() {
   const { batchId = '' } = useParams();
   const batch = useBatch(batchId);
+  useDocumentTitle(batch.data?.code ?? 'Batch');
 
   return (
     <>

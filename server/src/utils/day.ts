@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
 import { z } from 'zod';
 import { APP_TIMEZONE, DAY_REGEX } from '@batchops/shared';
 

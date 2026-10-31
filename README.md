@@ -3,11 +3,29 @@
 Internal platform for a training vertical: track student batches, sessions, daily updates and events
 across instructors, with read-only analytics for senior management.
 
-| Role         | Access                                                                      |
-| ------------ | --------------------------------------------------------------------------- |
-| `admin`      | Everything — users, batches, sessions, daily updates, events, analytics     |
-| `instructor` | Assigned batches, own sessions (create/edit), events they lead, own stats   |
-| `viewer`     | Read-only dashboard, batches, sessions, daily updates, events and analytics |
+| Role         | Who                    | Access                                                                       |
+| ------------ | ---------------------- | ---------------------------------------------------------------------------- |
+| `admin`      | Vertical lead          | Everything: users, batches, sessions, daily updates, events, analytics       |
+| `instructor` | Co-instructors         | Assigned batches, own sessions (create/edit), events they lead, own stats    |
+| `viewer`     | Senior manager         | Read-only dashboard, batches, sessions, daily updates, events and analytics  |
+
+## Features
+
+- **Dashboard** — today at a glance per role: sessions today, active batches with progress, events in the next
+  7 days, today's daily update (with a "file it" prompt for the admin), recent updates and an activity feed.
+- **Batches** — searchable/filterable grid with progress; detail page with syllabus checklist, session
+  timeline, linked events and instructors. Admins create, edit, archive and tick off modules.
+- **Sessions** — log from anywhere or from a batch; month calendar + day view; instructors log and edit only
+  their own sessions on batches they teach.
+- **Daily updates** — one end-of-day update per IST day (summary, highlights, blockers, next-day plan, batch
+  notes, status), written alongside that day's sessions; a filterable feed for the manager.
+- **Events** — workshops, hackathons, talks, assessments; month calendar and list views; lead + co-leads,
+  linked batches, mark completed with outcome and participant count.
+- **Analytics** — KPIs and eight charts (progress, sessions and attendance over time, instructor workload,
+  session status, events by month and by leader, update consistency) over 7/30/90 days or a custom range,
+  filterable by batch and instructor. Every chart also has a table view.
+- **Admin** — create instructor/viewer accounts (no public signup), edit roles, reset passwords, deactivate.
+- Light/dark mode, responsive down to phone width, keyboard-accessible dialogs.
 
 ## Stack
 
@@ -19,7 +37,7 @@ across instructors, with read-only analytics for senior management.
 
 ## Getting started
 
-Prerequisites: Node.js 20.19+ and MongoDB (local or Atlas).
+Prerequisites: Node.js 20.19+ and MongoDB 5+ (local or Atlas).
 
 ```bash
 npm install
@@ -30,23 +48,71 @@ npm run seed:demo                     # optional: realistic demo data (WIPES all
 npm run dev                           # API on :4000, web app on :5173
 ```
 
-`seed:demo` builds a vertical relative to today: 3 instructors and a viewer (password `Demo@1234`, or
-`DEMO_PASSWORD`), 4 batches, every scheduled session since each batch started, ~30 days of daily updates,
-events either side of today and an activity feed. It refuses to run with `NODE_ENV=production`.
-
 Open http://localhost:5173 and sign in with the admin credentials from `server/.env`.
-Generate JWT secrets with `openssl rand -base64 48`.
+
+### Demo data
+
+`npm run seed:demo` builds a vertical relative to today: 4 batches (3 active, 1 upcoming), every scheduled
+session since each batch started, ~30 days of daily updates (a few missed, today left open), events either
+side of today and an activity feed. It keeps your admin account and adds:
+
+| Name          | Email                 | Role       |
+| ------------- | --------------------- | ---------- |
+| Asha Verma    | `asha@batchops.dev`   | instructor |
+| Rahul Mehta   | `rahul@batchops.dev`  | instructor |
+| Priya Nair    | `priya@batchops.dev`  | instructor |
+| Sanjay Kapoor | `sanjay@batchops.dev` | viewer     |
+
+Password for all four: `Demo@1234` (override with `DEMO_PASSWORD`). The script refuses to run with
+`NODE_ENV=production`.
 
 ### Scripts (run from the repo root)
 
-| Script              | What it does                                         |
-| ------------------- | ---------------------------------------------------- |
-| `npm run dev`       | Runs the API (tsx watch) and the Vite dev server     |
-| `npm run seed`      | Creates the first admin account (safe to re-run)     |
-| `npm run seed:demo` | Resets the database to demo data (keeps the admin)   |
-| `npm run typecheck` | Type-checks every workspace                          |
-| `npm run build`     | Bundles the API (tsup) and builds the client (Vite)  |
-| `npm start`         | Runs the built API from `server/dist`                |
+| Script              | What it does                                                        |
+| ------------------- | ------------------------------------------------------------------- |
+| `npm run dev`       | API (tsx watch) + Vite dev server                                   |
+| `npm run seed`      | Creates the first admin account (safe to re-run)                    |
+| `npm run seed:demo` | Resets the database to demo data (keeps the admin)                  |
+| `npm run typecheck` | Type-checks every workspace                                         |
+| `npm run build`     | Bundles the API (tsup) and builds the client (Vite)                 |
+| `npm start`         | Runs the built API; in production it also serves the built client   |
+
+### Environment
+
+`server/.env` (validated at startup — the server exits with a clear message if something is wrong):
+
+| Variable                 | Default                   | Notes                                                      |
+| ------------------------ | ------------------------- | ---------------------------------------------------------- |
+| `NODE_ENV`               | `development`             | `production` turns on secure cookies and client serving    |
+| `PORT`                   | `4000`                    |                                                            |
+| `MONGODB_URI`            | —                         | required                                                   |
+| `CLIENT_ORIGIN`          | `http://localhost:5173`   | comma-separated origins allowed to call the API with cookies |
+| `JWT_ACCESS_SECRET`      | —                         | required, ≥ 32 chars; `openssl rand -base64 48`            |
+| `JWT_REFRESH_SECRET`     | —                         | required, ≥ 32 chars, different from the access secret     |
+| `ACCESS_TOKEN_TTL_MIN`   | `15`                      |                                                            |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                       |                                                            |
+| `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | used by `npm run seed`                             |
+| `SERVE_CLIENT`           | `true` in production      | serve `client/dist` from the API                           |
+| `DEMO_PASSWORD`          | `Demo@1234`               | demo seed only                                             |
+
+`client/.env`: `VITE_API_URL` (default `/api`). Only change it if the API lives on a different origin.
+
+## Deployment
+
+The simplest setup is one Node process serving both the API and the app from the same origin, which keeps the
+auth cookies first-party:
+
+```bash
+npm ci
+npm run build
+NODE_ENV=production npm start         # with server/.env (or real env vars) set
+npm run seed                          # once, to create the first admin
+```
+
+The server serves `client/dist` (hashed assets cached for a year, `index.html` revalidated) and falls back to
+the app shell for client-side routes; everything under `/api` stays JSON. Put it behind HTTPS (cookies are
+`Secure` in production). If you host the client separately, set `CLIENT_ORIGIN` on the server and
+`VITE_API_URL` on the client — note that cross-site cookies then need `SameSite=None`.
 
 ## Project structure
 
@@ -56,82 +122,82 @@ server/src/
   config/              Zod-validated env, MongoDB connection
   middleware/          authenticate, authorize, validate, rate limits, error handler
   modules/<feature>/   model · schema (Zod) · service · controller · routes
+                       (auth, users, batches, sessions, updates, events, activity, dashboard, analytics)
   utils/               ApiError, response envelope, pagination, IST day helpers, password hashing
-  scripts/             seed scripts
+  scripts/             seedAdmin, seedDemo
 client/src/
-  components/ui/       Button, Input, Field, Card, Badge, Skeleton, EmptyState, PageHeader, Avatar…
+  components/ui/       Button, Input, Select, Modal, Card, Badge, StatCard, DataTable, EmptyState,
+                       PageHeader, ConfirmDialog, Skeleton, Pagination…
   components/layout/   AppShell, Sidebar (role-based nav), Topbar, UserMenu, ThemeToggle
   features/<feature>/  api hooks (TanStack Query), schemas, components, pages
-  lib/                 Axios client, query client, IST day helpers, theme
+  lib/                 Axios client, query client, IST day helpers, theme, URL-synced filters
   routes/              RequireAuth / RequireRole guards
 ```
 
-## API conventions
+## API
 
 - Success: `{ success: true, data, message?, meta? }` — `meta` carries pagination on list endpoints.
 - Failure: `{ success: false, error: { code, message, details? } }` with a matching HTTP status.
-- Every body/query is validated with Zod; validation failures return `400 VALIDATION_ERROR`.
-- Admin-only endpoints live under `/api/admin/*`, which requires `authenticate` + `authorize('admin')`.
+- Every body and query is validated with Zod; failures return `400 VALIDATION_ERROR` with per-field details.
+- Admin-only endpoints live under `/api/admin/*`, behind `authenticate` + `authorize('admin')`.
 
-| Area    | Endpoints                                                                                                         | Access                          |
-| ------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| Auth    | `POST /api/auth/login` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password`                       | public / signed in              |
-| Users   | `GET /api/users/options?roles=`                                                                                   | signed in                       |
-|         | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                      | admin                           |
-| Batches | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id`                                      | signed in (instructors: own)    |
-|         | `GET /api/batches/options` (non-archived, for pickers)                                                            | signed in (instructors: own)    |
-|         | `POST /api/admin/batches` · `PUT /:id` · `PATCH /:id/archive` · `PATCH /:id/modules/:moduleId`                     | admin                           |
-| Sessions| `GET /api/sessions?day&from&to&batch&instructor&status&type&page` · `GET /calendar?month=` · `GET /:id`           | signed in (instructors: own batches) |
-|         | `POST /api/sessions` · `PUT /:id` · `DELETE /:id`                                                                 | admin: any · instructor: own, on assigned batches |
-| Updates | `GET /api/updates?from&to&status&page` · `GET /api/updates/:day`                                                  | admin, viewer                   |
-|         | `PUT /api/updates/:day` (upsert — one update per IST day)                                                         | admin                           |
-| Events  | `GET /api/events?from&to&type&status&batch&leader&sort&page` · `GET /:id`                                         | signed in (instructors: led/co-led) |
-|         | `POST /api/admin/events` · `PUT /:id` · `PATCH /:id/complete` · `DELETE /:id`                                     | admin                           |
-| Dashboard | `GET /api/dashboard` (today at a glance, role-aware)                                                          | signed in                       |
-| Analytics | `GET /api/analytics/{kpis,batch-progress,sessions-over-time,instructor-workload,attendance-trend,session-status,events}?from&to&batch&instructor` | signed in (instructors: own numbers) |
-|         | `GET /api/analytics/update-consistency`                                                                           | admin, viewer                   |
+| Area      | Endpoints                                                                                                       | Access                                   |
+| --------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Auth      | `POST /api/auth/login` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password`                     | public / signed in                       |
+| Users     | `GET /api/users/options?roles=`                                                                                 | signed in                                |
+|           | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                    | admin                                    |
+| Batches   | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id` · `GET /api/batches/options`       | signed in (instructors: own)             |
+|           | `POST /api/admin/batches` · `PUT /:id` · `PATCH /:id/archive` · `PATCH /:id/modules/:moduleId`                   | admin                                    |
+| Sessions  | `GET /api/sessions?day&from&to&batch&instructor&status&type&page` · `GET /calendar?month=` · `GET /:id`         | signed in (instructors: own batches)     |
+|           | `POST /api/sessions` · `PUT /:id` · `DELETE /:id`                                                               | admin: any · instructor: own, assigned   |
+| Updates   | `GET /api/updates?from&to&status&page` · `GET /api/updates/:day`                                                | admin, viewer                            |
+|           | `PUT /api/updates/:day` (upsert — one update per IST day)                                                       | admin                                    |
+| Events    | `GET /api/events?from&to&type&status&batch&leader&sort&page` · `GET /:id`                                       | signed in (instructors: led/co-led)      |
+|           | `POST /api/admin/events` · `PUT /:id` · `PATCH /:id/complete` · `DELETE /:id`                                   | admin                                    |
+| Dashboard | `GET /api/dashboard`                                                                                            | signed in (role-aware)                   |
+| Analytics | `GET /api/analytics/{kpis,batch-progress,sessions-over-time,instructor-workload,attendance-trend,session-status,events}` | signed in (instructors: own numbers) |
+|           | `GET /api/analytics/update-consistency` — all take `from&to&batch&instructor`                                  | admin, viewer                            |
 
 ## Key decisions
 
 - **Auth via httpOnly cookies.** A 15-minute access token and a 7-day refresh token, both httpOnly and
-  `SameSite=Lax`; the refresh cookie is scoped to `/api/auth`. The refresh token rotates on every use.
-  The Axios client refreshes once on a 401 and retries, sharing a single refresh across parallel requests.
-- **Instant revocation.** Each user has a `tokenVersion` embedded in their tokens. `authenticate` re-reads the
-  user on every request, so deactivating a user, changing a role or changing a password takes effect on the
-  next request. A password change bumps `tokenVersion`, signing out every other device.
-- **RBAC on the server.** The UI hides what a role can't use, but the API is the source of truth.
-  The acting user's id and role always come from the token, never the request body.
-- **IST days.** Instants are stored in UTC. Daily records also carry a `day` string (`YYYY-MM-DD` in
-  Asia/Kolkata), which makes "what happened on this day" queries exact and index-friendly. The server
-  decides what "today" is.
-- **Same-origin API in development.** Vite proxies `/api` to the server, so cookies work without
-  cross-site configuration. In production, serve the client and API from the same site or set
-  `CLIENT_ORIGIN` and `VITE_API_URL` accordingly.
-- **Batch dates are day strings.** `startDate`/`endDate` are stored as `YYYY-MM-DD` like other day fields, since a
-  batch's dates have no time of day. Batch progress = completed sessions ÷ `totalPlannedSessions`.
+  `SameSite=Lax`; the refresh cookie is scoped to `/api/auth` and rotates on every use. The Axios client
+  refreshes once on a 401 and retries, sharing one refresh across parallel requests. Failed logins are
+  rate-limited.
+- **Instant revocation.** Tokens carry the user's `tokenVersion`, and `authenticate` re-reads the user on every
+  request, so deactivation, role changes and password changes apply on the next request. A password change or
+  reset bumps `tokenVersion`, signing out every other device.
+- **RBAC on the server.** The UI hides what a role can't use, but the API is the source of truth. The acting
+  user's id and role always come from the token, never the request body.
+- **IST days.** Instants are stored in UTC. Daily records (sessions, updates, events, batch dates) carry a
+  `day` string (`YYYY-MM-DD` in Asia/Kolkata), which makes "what happened on this day" queries exact and
+  index-friendly. The server decides what "today" is.
 - **Session rules.** Instructors always log as themselves (any `instructor` in the body is ignored), only on
-  batches they're assigned to, and can edit or delete only sessions they took. Admins can log for any instructor
-  assigned to the batch. Sessions can't be dated in the future or logged to archived batches.
-- **Daily updates are keyed by day.** `PUT /api/updates/:day` creates or replaces the single update for that IST
-  day (a unique index guarantees one per day). Past days can be back-filled; future days can't.
-- **Events.** Instructors see the events they lead or co-lead. Only admins create, edit, complete or delete them;
-  an event can't be marked completed before its day. Cancelling keeps a record; deleting removes it.
-- **Analytics are aggregations.** Every number comes from a MongoDB pipeline over the filtered range (default:
-  last 30 days); weekly series come back pivoted with empty weeks filled, ready to chart. Instructors' filters are
-  forced to themselves on the server. Batch progress is cumulative, so it ignores the date range.
+  batches they're assigned to, and can change only sessions they took. Admins can log for any instructor on
+  the batch. No future dates, no archived batches, http(s)-only recording links.
+- **Daily updates are keyed by day.** `PUT /api/updates/:day` creates or replaces the single update for that
+  day (unique index). Past days can be back-filled; future days can't.
+- **Events.** Instructors see events they lead or co-lead. Only admins create, edit, complete or delete; an
+  event can't be completed before its day. Cancelling keeps a record; deleting removes it.
+- **Analytics are aggregations.** Every number comes from a MongoDB pipeline over the filtered range (default
+  last 30 days). Weekly series come back pivoted with empty weeks filled. Instructors' filters are forced to
+  themselves on the server. Batch progress is cumulative and ignores the range.
 - **Charts.** A validated colour-blind-safe categorical palette (light and dark steps) in fixed order; a batch or
-  person keeps its colour regardless of filters. Status colours are reserved and always labelled. Every chart has
-  a tooltip, a legend when it has 2+ series, and a table view.
-- **Activity log.** Mutations write a pre-rendered summary ("Asha created batch MERN-OCT-26") to `activities`,
-  which feeds the dashboard's recent-activity list without joins. Logging failures never fail the request.
-- **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
-  Users are deactivated, never deleted, so history stays intact.
+  person keeps its colour regardless of filters. Status colours are reserved and always labelled. Every chart
+  has a tooltip, a legend for 2+ series, and a table view. No dual-axis charts (workload toggles hours/sessions).
+- **Activity log.** Mutations write a pre-rendered summary to `activities`, which feeds the dashboard without
+  joins. Logging failures never fail the request.
+- **Soft deletes where history matters.** Users are deactivated, batches archived. Sessions and events can be
+  deleted (and batch progress recalculates); daily updates are edited, not deleted.
+- **Performance.** Every page is code-split (the chart library only loads on Analytics) and framework code is in
+  long-lived vendor chunks. List endpoints paginate; filters live in the URL so views can be shared.
+- **Security headers.** Helmet's default Content-Security-Policy is kept strict (no inline scripts — the
+  pre-paint theme script is a file).
 
-## Build status
+## Troubleshooting
 
-- [x] Phase 1 — setup, auth + RBAC, admin seed, login, layout shell
-- [x] Phase 2 — users admin, batches CRUD, batch detail
-- [x] Phase 3 — sessions
-- [x] Phase 4 — daily updates, events
-- [x] Phase 5 — dashboard, analytics
-- [ ] Phase 6 — polish, full demo seed
+- **The server exits on start** — read the message: it lists each invalid env variable.
+- **Login works but you're immediately signed out** — the API and app must share an origin (use the Vite dev
+  server on :5173, or the production server serving the client). Over plain HTTP in production, browsers drop
+  `Secure` cookies except on `localhost`.
+- **"BatchOps was updated" after a deploy** — an open tab asked for an old code chunk; reload.

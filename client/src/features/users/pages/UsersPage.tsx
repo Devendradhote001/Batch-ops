@@ -55,7 +55,7 @@ export function UsersPage() {
       key: 'user',
       header: 'User',
       cell: (u) => (
-        <div className="flex min-w-48 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:min-w-48">
           <Avatar name={u.name} color={u.avatarColor} />
           <div className="min-w-0">
             <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
@@ -63,14 +63,25 @@ export function UsersPage() {
               {u._id === me._id && <span className="ml-1.5 text-xs font-normal text-zinc-400">(you)</span>}
             </p>
             <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{u.email}</p>
+            {/* On phones the role/status columns are hidden, so show them here. */}
+            <div className="mt-1 flex gap-1.5 sm:hidden">
+              <Badge tone={ROLE_TONES[u.role]}>{ROLE_LABELS[u.role]}</Badge>
+              {!u.isActive && <Badge>Deactivated</Badge>}
+            </div>
           </div>
         </div>
       ),
     },
-    { key: 'role', header: 'Role', cell: (u) => <Badge tone={ROLE_TONES[u.role]}>{ROLE_LABELS[u.role]}</Badge> },
+    {
+      key: 'role',
+      header: 'Role',
+      className: 'hidden sm:table-cell',
+      cell: (u) => <Badge tone={ROLE_TONES[u.role]}>{ROLE_LABELS[u.role]}</Badge>,
+    },
     {
       key: 'status',
       header: 'Status',
+      className: 'hidden sm:table-cell',
       cell: (u) => (u.isActive ? <Badge tone="success">Active</Badge> : <Badge tone="neutral">Deactivated</Badge>),
     },
     {

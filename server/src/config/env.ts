@@ -13,7 +13,17 @@ const envSchema = z.object({
   ADMIN_NAME: z.string().default('Vertical Lead'),
   ADMIN_EMAIL: z.string().optional(),
   ADMIN_PASSWORD: z.string().optional(),
-});
+  /** Serve the built client (client/dist) from this server. Defaults to on in production. */
+  SERVE_CLIENT: z.enum(['true', 'false']).optional(),
+})
+  .refine(
+    (e) => e.NODE_ENV !== 'production' || ![e.JWT_ACCESS_SECRET, e.JWT_REFRESH_SECRET].some((s) => s.startsWith('replace-with')),
+    { path: ['JWT_ACCESS_SECRET'], message: 'Set real JWT secrets in production (openssl rand -base64 48)' },
+  )
+  .refine((e) => e.JWT_ACCESS_SECRET !== e.JWT_REFRESH_SECRET, {
+    path: ['JWT_REFRESH_SECRET'],
+    message: 'Access and refresh secrets must differ',
+  });
 
 const parsed = envSchema.safeParse(process.env);
 
@@ -28,5 +38,6 @@ if (!parsed.success) {
 export const env = {
   ...parsed.data,
   isProduction: parsed.data.NODE_ENV === 'production',
+  serveClient: parsed.data.SERVE_CLIENT ? parsed.data.SERVE_CLIENT === 'true' : parsed.data.NODE_ENV === 'production',
   clientOrigins: parsed.data.CLIENT_ORIGIN.split(',').map((origin) => origin.trim()),
 };

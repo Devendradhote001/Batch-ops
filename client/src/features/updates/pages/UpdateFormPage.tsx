@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { useBatchOptions, useSessions } from '@/features/sessions/api';
 import { SESSION_STATUS_META, SESSION_TYPE_META, formatDuration } from '@/features/sessions/meta';
 import { getErrorMessage } from '@/lib/api';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { cn } from '@/lib/cn';
 import { dayjs, todayIST } from '@/lib/day';
 import { useSaveUpdate, useUpdate } from '../api';
@@ -27,6 +28,7 @@ export function UpdateFormPage() {
   const { day = '' } = useParams();
   const today = todayIST();
   const existing = useUpdate(day, DAY_REGEX.test(day) && day <= today);
+  useDocumentTitle('Daily update');
 
   if (!DAY_REGEX.test(day) || day > today) return <Navigate to={`/updates/${today}/edit`} replace />;
 

@@ -1,4 +1,5 @@
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BrandMark } from '@/components/BrandMark';
 import { useAuthUser } from '@/features/auth/api';
@@ -14,6 +15,13 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }: SidebarProps) {
   const sections = navForRole(useAuthUser().role);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && onCloseMobile();
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [mobileOpen, onCloseMobile]);
 
   return (
     <>

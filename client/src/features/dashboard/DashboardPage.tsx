@@ -33,6 +33,7 @@ export function DashboardPage() {
     <>
       <PageHeader
         title={`${greetingIST()}, ${firstName}`}
+        documentTitle="Dashboard"
         description={
           user.role === 'instructor' ? "Here's your day across the batches you teach." : "Here's what's happening across the vertical today."
         }

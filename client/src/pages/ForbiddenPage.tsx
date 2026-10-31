@@ -2,9 +2,11 @@ import { ShieldX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 export function ForbiddenPage() {
   const navigate = useNavigate();
+  useDocumentTitle('No access');
   return (
     <EmptyState
       className="py-24"
