@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "batchops",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=4000","npm", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+# BatchOps
+
+Internal platform for a training vertical: track student batches, sessions, daily updates and events
+across instructors, with read-only analytics for senior management.
+
+| Role         | Access                                                                      |
+| ------------ | --------------------------------------------------------------------------- |
+| `admin`      | Everything — users, batches, sessions, daily updates, events, analytics     |
+| `instructor` | Assigned batches, own sessions (create/edit), events they lead, own stats   |
+| `viewer`     | Read-only dashboard, batches, sessions, daily updates, events and analytics |
+
+## Stack
+
+- **client/** — React 18, Vite, TypeScript, React Router 6, TanStack Query, React Hook Form + Zod,
+  Tailwind CSS 4, Recharts, lucide-react, dayjs, sonner, Axios
+- **server/** — Node.js, Express 5, TypeScript, MongoDB + Mongoose, Zod, JWT (httpOnly cookies), bcrypt,
+  helmet, cors, express-rate-limit, morgan
+- **shared/** — role/status enums and API types used by both apps
+
+## Getting started
+
+Prerequisites: Node.js 20.19+ and MongoDB (local or Atlas).
+
+```bash
+npm install
+cp server/.env.example server/.env    # then set the JWT secrets and admin credentials
+cp client/.env.example client/.env
+npm run seed                          # creates the first admin from ADMIN_EMAIL / ADMIN_PASSWORD
+npm run dev                           # API on :4000, web app on :5173
+```
+
+Open http://localhost:5173 and sign in with the admin credentials from `server/.env`.
+Generate JWT secrets with `openssl rand -base64 48`.
+
+### Scripts (run from the repo root)
+
+| Script              | What it does                                         |
+| ------------------- | ---------------------------------------------------- |
+| `npm run dev`       | Runs the API (tsx watch) and the Vite dev server     |
+| `npm run seed`      | Creates the first admin account (safe to re-run)     |
+| `npm run typecheck` | Type-checks every workspace                          |
+| `npm run build`     | Bundles the API (tsup) and builds the client (Vite)  |
+| `npm start`         | Runs the built API from `server/dist`                |
+
+## Project structure
+
+```
+shared/src/            enums (roles, statuses) + API response types
+server/src/
+  config/              Zod-validated env, MongoDB connection
+  middleware/          authenticate, authorize, validate, rate limits, error handler
+  modules/<feature>/   model · schema (Zod) · service · controller · routes
+  utils/               ApiError, response envelope, pagination, IST day helpers, password hashing
+  scripts/             seed scripts
+client/src/
+  components/ui/       Button, Input, Field, Card, Badge, Skeleton, EmptyState, PageHeader, Avatar…
+  components/layout/   AppShell, Sidebar (role-based nav), Topbar, UserMenu, ThemeToggle
+  features/<feature>/  api hooks (TanStack Query), schemas, components, pages
+  lib/                 Axios client, query client, IST day helpers, theme
+  routes/              RequireAuth / RequireRole guards
+```
+
+## API conventions
+
+- Success: `{ success: true, data, message?, meta? }` — `meta` carries pagination on list endpoints.
+- Failure: `{ success: false, error: { code, message, details? } }` with a matching HTTP status.
+- Every body/query is validated with Zod; validation failures return `400 VALIDATION_ERROR`.
+- Admin-only endpoints live under `/api/admin/*`, which requires `authenticate` + `authorize('admin')`.
+
+## Key decisions
+
+- **Auth via httpOnly cookies.** A 15-minute access token and a 7-day refresh token, both httpOnly and
+  `SameSite=Lax`; the refresh cookie is scoped to `/api/auth`. The refresh token rotates on every use.
+  The Axios client refreshes once on a 401 and retries, sharing a single refresh across parallel requests.
+- **Instant revocation.** Each user has a `tokenVersion` embedded in their tokens. `authenticate` re-reads the
+  user on every request, so deactivating a user, changing a role or changing a password takes effect on the
+  next request. A password change bumps `tokenVersion`, signing out every other device.
+- **RBAC on the server.** The UI hides what a role can't use, but the API is the source of truth.
+  The acting user's id and role always come from the token, never the request body.
+- **IST days.** Instants are stored in UTC. Daily records also carry a `day` string (`YYYY-MM-DD` in
+  Asia/Kolkata), which makes "what happened on this day" queries exact and index-friendly. The server
+  decides what "today" is.
+- **Same-origin API in development.** Vite proxies `/api` to the server, so cookies work without
+  cross-site configuration. In production, serve the client and API from the same site or set
+  `CLIENT_ORIGIN` and `VITE_API_URL` accordingly.
+- **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
+  Users are deactivated, never deleted, so history stays intact.
+
+## Build status
+
+- [x] Phase 1 — setup, auth + RBAC, admin seed, login, layout shell
+- [ ] Phase 2 — users admin, batches CRUD, batch detail
+- [ ] Phase 3 — sessions
+- [ ] Phase 4 — daily updates, events
+- [ ] Phase 5 — dashboard, analytics
+- [ ] Phase 6 — polish, full demo seed
