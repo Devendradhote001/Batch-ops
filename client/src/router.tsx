@@ -6,7 +6,10 @@ import { AdminBatchesPage } from '@/features/batches/pages/AdminBatchesPage';
 import { BatchDetailPage } from '@/features/batches/pages/BatchDetailPage';
 import { BatchesPage } from '@/features/batches/pages/BatchesPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { EventsPage } from '@/features/events/pages/EventsPage';
 import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
+import { UpdateFormPage } from '@/features/updates/pages/UpdateFormPage';
+import { UpdatesPage } from '@/features/updates/pages/UpdatesPage';
 import { UsersPage } from '@/features/users/pages/UsersPage';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -28,16 +31,10 @@ export const router = createBrowserRouter(
             {
               element: <RequireRole roles={['admin', 'viewer']} />,
               children: [
-                {
-                  path: 'updates',
-                  element: <ComingSoonPage title="Daily updates" description="End-of-day updates for the vertical." phase={4} />,
-                },
+                { path: 'updates', element: <UpdatesPage /> },
               ],
             },
-            {
-              path: 'events',
-              element: <ComingSoonPage title="Events" description="Workshops, hackathons, talks and assessments." phase={4} />,
-            },
+            { path: 'events', element: <EventsPage /> },
             {
               path: 'analytics',
               element: <ComingSoonPage title="Analytics" description="Progress, workload and attendance trends." phase={5} />,
@@ -51,6 +48,10 @@ export const router = createBrowserRouter(
                 { path: 'users', element: <UsersPage /> },
                 { path: 'batches', element: <AdminBatchesPage /> },
               ],
+            },
+            {
+              element: <RequireRole roles={['admin']} />,
+              children: [{ path: 'updates/:day/edit', element: <UpdateFormPage /> }],
             },
           ],
         },

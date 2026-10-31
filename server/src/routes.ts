@@ -4,7 +4,9 @@ import { authenticate } from './middleware/authenticate';
 import { authorize } from './middleware/authorize';
 import { authRoutes } from './modules/auth/auth.routes';
 import { adminBatchRoutes, batchRoutes } from './modules/batches/batch.routes';
+import { adminEventRoutes, eventRoutes } from './modules/events/event.routes';
 import { sessionRoutes } from './modules/sessions/session.routes';
+import { updateRoutes } from './modules/updates/update.routes';
 import { adminUserRoutes, userRoutes } from './modules/users/user.routes';
 import { sendSuccess } from './utils/response';
 import { todayIST } from './utils/day';
@@ -24,10 +26,13 @@ apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', authenticate, userRoutes);
 apiRouter.use('/batches', authenticate, batchRoutes);
 apiRouter.use('/sessions', authenticate, sessionRoutes);
+apiRouter.use('/updates', authenticate, updateRoutes);
+apiRouter.use('/events', authenticate, eventRoutes);
 
 /** Everything under /api/admin requires an authenticated admin. */
 const adminRouter = Router();
 adminRouter.use(authenticate, authorize('admin'));
 adminRouter.use('/users', adminUserRoutes);
 adminRouter.use('/batches', adminBatchRoutes);
+adminRouter.use('/events', adminEventRoutes);
 apiRouter.use('/admin', adminRouter);

@@ -77,6 +77,10 @@ client/src/
 |         | `POST /api/admin/batches` · `PUT /:id` · `PATCH /:id/archive` · `PATCH /:id/modules/:moduleId`                     | admin                           |
 | Sessions| `GET /api/sessions?day&from&to&batch&instructor&status&type&page` · `GET /calendar?month=` · `GET /:id`           | signed in (instructors: own batches) |
 |         | `POST /api/sessions` · `PUT /:id` · `DELETE /:id`                                                                 | admin: any · instructor: own, on assigned batches |
+| Updates | `GET /api/updates?from&to&status&page` · `GET /api/updates/:day`                                                  | admin, viewer                   |
+|         | `PUT /api/updates/:day` (upsert — one update per IST day)                                                         | admin                           |
+| Events  | `GET /api/events?from&to&type&status&batch&leader&sort&page` · `GET /:id`                                         | signed in (instructors: led/co-led) |
+|         | `POST /api/admin/events` · `PUT /:id` · `PATCH /:id/complete` · `DELETE /:id`                                     | admin                           |
 
 ## Key decisions
 
@@ -99,6 +103,10 @@ client/src/
 - **Session rules.** Instructors always log as themselves (any `instructor` in the body is ignored), only on
   batches they're assigned to, and can edit or delete only sessions they took. Admins can log for any instructor
   assigned to the batch. Sessions can't be dated in the future or logged to archived batches.
+- **Daily updates are keyed by day.** `PUT /api/updates/:day` creates or replaces the single update for that IST
+  day (a unique index guarantees one per day). Past days can be back-filled; future days can't.
+- **Events.** Instructors see the events they lead or co-lead. Only admins create, edit, complete or delete them;
+  an event can't be marked completed before its day. Cancelling keeps a record; deleting removes it.
 - **Activity log.** Mutations write a pre-rendered summary ("Asha created batch MERN-OCT-26") to `activities`,
   which feeds the dashboard's recent-activity list without joins. Logging failures never fail the request.
 - **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
@@ -109,6 +117,6 @@ client/src/
 - [x] Phase 1 — setup, auth + RBAC, admin seed, login, layout shell
 - [x] Phase 2 — users admin, batches CRUD, batch detail
 - [x] Phase 3 — sessions
-- [ ] Phase 4 — daily updates, events
+- [x] Phase 4 — daily updates, events
 - [ ] Phase 5 — dashboard, analytics
 - [ ] Phase 6 — polish, full demo seed

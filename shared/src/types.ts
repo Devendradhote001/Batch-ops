@@ -1,4 +1,4 @@
-import type { BatchStatus, Role, SessionStatus, SessionType } from './constants';
+import type { BatchStatus, EventStatus, EventType, Role, SessionStatus, SessionType, UpdateStatus } from './constants';
 
 export interface PaginationMeta {
   page: number;
@@ -124,4 +124,49 @@ export interface SessionCalendarDay {
   count: number;
   completed: number;
   minutes: number;
+}
+
+/** A batch as embedded in other records. */
+export interface BatchRef {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+export interface DailyUpdate {
+  _id: string;
+  /** YYYY-MM-DD (IST) — one update per day */
+  day: string;
+  author: UserSummary;
+  summary: string;
+  highlights: string[];
+  blockers: string[];
+  nextDayPlan: string[];
+  batchNotes: { batch: BatchRef; note: string }[];
+  status: UpdateStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A vertical event (workshop, hackathon…). Named to avoid clashing with the DOM's `Event`. */
+export interface VerticalEvent {
+  _id: string;
+  title: string;
+  /** YYYY-MM-DD (IST) */
+  day: string;
+  /** HH:mm or '' when not set */
+  startTime: string;
+  endTime: string;
+  type: EventType;
+  /** Empty means vertical-wide. */
+  batches: BatchRef[];
+  leadBy: UserSummary;
+  coLeads: UserSummary[];
+  description: string;
+  location: string;
+  status: EventStatus;
+  outcomeNotes: string;
+  participantCount: number;
+  createdAt: string;
+  updatedAt: string;
 }

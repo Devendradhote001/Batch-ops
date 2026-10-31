@@ -29,6 +29,11 @@ export function dayStartUTC(day: string): Date {
   return dayjs.tz(day, APP_TIMEZONE).startOf('day').toDate();
 }
 
+/** "31 Oct" — for human-readable activity summaries. */
+export function formatDayShort(day: string): string {
+  return dayjs(day).format('D MMM');
+}
+
 export const daySchema = z
   .string()
   .regex(DAY_REGEX, 'Expected a date in YYYY-MM-DD format')

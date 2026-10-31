@@ -30,6 +30,8 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StatCard } from '@/components/ui/StatCard';
 import { useAuthUser } from '@/features/auth/api';
+import { BatchEvents } from '@/features/events/components/BatchEvents';
+import { useEventActions } from '@/features/events/useEventActions';
 import { SessionTimeline } from '@/features/sessions/components/SessionTimeline';
 import { canLogToBatch } from '@/features/sessions/permissions';
 import { useSessionActions } from '@/features/sessions/useSessionActions';
@@ -76,6 +78,7 @@ function BatchDetail({ batch }: { batch: Batch }) {
   const [editing, setEditing] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const sessionActions = useSessionActions();
+  const eventActions = useEventActions();
   const canLog = !batch.isArchived && canLogToBatch(user, batch);
   const { stats } = batch;
 
@@ -166,7 +169,11 @@ function BatchDetail({ batch }: { batch: Batch }) {
             <CardHeader>
               <CardTitle>Events</CardTitle>
             </CardHeader>
-            <EmptyState icon={CalendarDays} title="Events arrive in Phase 4" description="Workshops, hackathons and assessments linked to this batch." className="py-10" />
+            <BatchEvents
+              batchId={batch._id}
+              onOpen={eventActions.open}
+              emptyAction={isAdmin && <Button onClick={() => eventActions.create()}>Schedule an event</Button>}
+            />
           </Card>
         </div>
 
@@ -219,6 +226,7 @@ function BatchDetail({ batch }: { batch: Batch }) {
       </div>
 
       {sessionActions.dialogs}
+      {eventActions.dialogs}
       {isAdmin && (
         <>
           <BatchFormModal open={editing} onClose={() => setEditing(false)} batch={batch} />
