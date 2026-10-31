@@ -1,5 +1,6 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ProfilePage } from '@/features/auth/pages/ProfilePage';
 import { AdminBatchesPage } from '@/features/batches/pages/AdminBatchesPage';
@@ -11,7 +12,6 @@ import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { UpdateFormPage } from '@/features/updates/pages/UpdateFormPage';
 import { UpdatesPage } from '@/features/updates/pages/UpdatesPage';
 import { UsersPage } from '@/features/users/pages/UsersPage';
-import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireAuth, RequireRole } from '@/routes/guards';
 
@@ -35,10 +35,7 @@ export const router = createBrowserRouter(
               ],
             },
             { path: 'events', element: <EventsPage /> },
-            {
-              path: 'analytics',
-              element: <ComingSoonPage title="Analytics" description="Progress, workload and attendance trends." phase={5} />,
-            },
+            { path: 'analytics', element: <AnalyticsPage /> },
             { path: 'profile', element: <ProfilePage /> },
             {
               path: 'admin',

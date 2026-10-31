@@ -51,6 +51,7 @@ export function useSaveUpdate(day: string) {
     onSuccess: (update) => {
       queryClient.setQueryData(updateKeys.day(day), update);
       queryClient.invalidateQueries({ queryKey: ['updates', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

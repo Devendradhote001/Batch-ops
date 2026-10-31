@@ -10,6 +10,15 @@ interface ActivityInput {
   summary: string;
 }
 
+export function listRecentActivity(limit: number) {
+  return Activity.find()
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .populate('actor', 'name avatarColor')
+    .select('-__v')
+    .lean();
+}
+
 /** Records an activity entry. Never fails the request that triggered it. */
 export async function logActivity({ actor, action, entity, entityId, summary }: ActivityInput) {
   try {

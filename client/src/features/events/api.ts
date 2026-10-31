@@ -41,7 +41,14 @@ export function useInfiniteEvents(params: EventListParams) {
 
 function useEventMutation<V>(mutationFn: (values: V) => Promise<VerticalEvent | null>) {
   const queryClient = useQueryClient();
-  return useMutation({ mutationFn, onSuccess: () => queryClient.invalidateQueries({ queryKey: eventKeys.all }) });
+  return useMutation({
+    mutationFn,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: eventKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]),
+  });
 }
 
 function toPayload(values: EventFormValues) {

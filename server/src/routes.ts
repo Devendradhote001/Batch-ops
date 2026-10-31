@@ -2,8 +2,10 @@ import { Router } from 'express';
 import mongoose from 'mongoose';
 import { authenticate } from './middleware/authenticate';
 import { authorize } from './middleware/authorize';
+import { analyticsRoutes } from './modules/analytics/analytics.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { adminBatchRoutes, batchRoutes } from './modules/batches/batch.routes';
+import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { adminEventRoutes, eventRoutes } from './modules/events/event.routes';
 import { sessionRoutes } from './modules/sessions/session.routes';
 import { updateRoutes } from './modules/updates/update.routes';
@@ -28,6 +30,8 @@ apiRouter.use('/batches', authenticate, batchRoutes);
 apiRouter.use('/sessions', authenticate, sessionRoutes);
 apiRouter.use('/updates', authenticate, updateRoutes);
 apiRouter.use('/events', authenticate, eventRoutes);
+apiRouter.use('/dashboard', authenticate, dashboardRoutes);
+apiRouter.use('/analytics', authenticate, analyticsRoutes);
 
 /** Everything under /api/admin requires an authenticated admin. */
 const adminRouter = Router();

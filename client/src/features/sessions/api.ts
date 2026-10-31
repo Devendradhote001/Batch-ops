@@ -65,6 +65,7 @@ function useInvalidateAfterSessionChange() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: sessionKeys.all }),
       queryClient.invalidateQueries({ queryKey: batchKeys.all }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
     ]);
 }
 

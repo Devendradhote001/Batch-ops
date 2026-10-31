@@ -26,8 +26,13 @@ npm install
 cp server/.env.example server/.env    # then set the JWT secrets and admin credentials
 cp client/.env.example client/.env
 npm run seed                          # creates the first admin from ADMIN_EMAIL / ADMIN_PASSWORD
+npm run seed:demo                     # optional: realistic demo data (WIPES all data except the admin)
 npm run dev                           # API on :4000, web app on :5173
 ```
+
+`seed:demo` builds a vertical relative to today: 3 instructors and a viewer (password `Demo@1234`, or
+`DEMO_PASSWORD`), 4 batches, every scheduled session since each batch started, ~30 days of daily updates,
+events either side of today and an activity feed. It refuses to run with `NODE_ENV=production`.
 
 Open http://localhost:5173 and sign in with the admin credentials from `server/.env`.
 Generate JWT secrets with `openssl rand -base64 48`.
@@ -38,6 +43,7 @@ Generate JWT secrets with `openssl rand -base64 48`.
 | ------------------- | ---------------------------------------------------- |
 | `npm run dev`       | Runs the API (tsx watch) and the Vite dev server     |
 | `npm run seed`      | Creates the first admin account (safe to re-run)     |
+| `npm run seed:demo` | Resets the database to demo data (keeps the admin)   |
 | `npm run typecheck` | Type-checks every workspace                          |
 | `npm run build`     | Bundles the API (tsup) and builds the client (Vite)  |
 | `npm start`         | Runs the built API from `server/dist`                |
@@ -81,6 +87,9 @@ client/src/
 |         | `PUT /api/updates/:day` (upsert — one update per IST day)                                                         | admin                           |
 | Events  | `GET /api/events?from&to&type&status&batch&leader&sort&page` · `GET /:id`                                         | signed in (instructors: led/co-led) |
 |         | `POST /api/admin/events` · `PUT /:id` · `PATCH /:id/complete` · `DELETE /:id`                                     | admin                           |
+| Dashboard | `GET /api/dashboard` (today at a glance, role-aware)                                                          | signed in                       |
+| Analytics | `GET /api/analytics/{kpis,batch-progress,sessions-over-time,instructor-workload,attendance-trend,session-status,events}?from&to&batch&instructor` | signed in (instructors: own numbers) |
+|         | `GET /api/analytics/update-consistency`                                                                           | admin, viewer                   |
 
 ## Key decisions
 
@@ -107,6 +116,12 @@ client/src/
   day (a unique index guarantees one per day). Past days can be back-filled; future days can't.
 - **Events.** Instructors see the events they lead or co-lead. Only admins create, edit, complete or delete them;
   an event can't be marked completed before its day. Cancelling keeps a record; deleting removes it.
+- **Analytics are aggregations.** Every number comes from a MongoDB pipeline over the filtered range (default:
+  last 30 days); weekly series come back pivoted with empty weeks filled, ready to chart. Instructors' filters are
+  forced to themselves on the server. Batch progress is cumulative, so it ignores the date range.
+- **Charts.** A validated colour-blind-safe categorical palette (light and dark steps) in fixed order; a batch or
+  person keeps its colour regardless of filters. Status colours are reserved and always labelled. Every chart has
+  a tooltip, a legend when it has 2+ series, and a table view.
 - **Activity log.** Mutations write a pre-rendered summary ("Asha created batch MERN-OCT-26") to `activities`,
   which feeds the dashboard's recent-activity list without joins. Logging failures never fail the request.
 - **No public signup.** Accounts are created by an admin; the first admin comes from the seed script.
@@ -118,5 +133,5 @@ client/src/
 - [x] Phase 2 — users admin, batches CRUD, batch detail
 - [x] Phase 3 — sessions
 - [x] Phase 4 — daily updates, events
-- [ ] Phase 5 — dashboard, analytics
+- [x] Phase 5 — dashboard, analytics
 - [ ] Phase 6 — polish, full demo seed

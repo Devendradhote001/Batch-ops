@@ -29,6 +29,17 @@ export function dayStartUTC(day: string): Date {
   return dayjs.tz(day, APP_TIMEZONE).startOf('day').toDate();
 }
 
+/** The Monday on or before a YYYY-MM-DD day. */
+export function startOfWeek(day: string): string {
+  const d = dayjs(day);
+  return d.subtract((d.day() + 6) % 7, 'day').format(DAY_FORMAT);
+}
+
+/** Whole days from `from` to `to` (0 when equal). */
+export function daysBetween(from: string, to: string): number {
+  return dayjs(to).diff(dayjs(from), 'day');
+}
+
 /** "31 Oct" — for human-readable activity summaries. */
 export function formatDayShort(day: string): string {
   return dayjs(day).format('D MMM');

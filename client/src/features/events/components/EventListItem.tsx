@@ -12,9 +12,11 @@ interface EventListItemProps {
   onOpen: (event: VerticalEvent) => void;
   /** Hide the date block, e.g. inside a single-day agenda. */
   hideDate?: boolean;
+  /** Narrow columns: drop location and the lead, keep date, type and time. */
+  compact?: boolean;
 }
 
-export function EventListItem({ event, onOpen, hideDate }: EventListItemProps) {
+export function EventListItem({ event, onOpen, hideDate, compact }: EventListItemProps) {
   const { icon: TypeIcon, label: typeLabel } = EVENT_TYPE_META[event.type];
   const status = EVENT_STATUS_META[event.status];
   const time = formatTimeRange(event.startTime, event.endTime);
@@ -47,18 +49,18 @@ export function EventListItem({ event, onOpen, hideDate }: EventListItemProps) {
                 <Clock className="size-3.5" aria-hidden /> {time}
               </span>
             )}
-            {event.location && (
+            {event.location && !compact && (
               <span className="flex max-w-48 items-center gap-1 truncate">
                 <MapPin className="size-3.5 shrink-0" aria-hidden /> <span className="truncate">{event.location}</span>
               </span>
             )}
-            <span className="flex items-center gap-1">
+            <span className={cn('flex items-center gap-1', compact && 'hidden')}>
               <Layers className="size-3.5" aria-hidden />
               {event.batches.length ? event.batches.map((b) => b.code).join(', ') : 'Vertical-wide'}
             </span>
           </span>
         </span>
-        <span className="hidden shrink-0 items-center gap-1.5 self-center text-xs text-zinc-500 sm:flex dark:text-zinc-400">
+        <span className={cn('hidden shrink-0 items-center gap-1.5 self-center text-xs text-zinc-500 dark:text-zinc-400', !compact && 'sm:flex')}>
           <Avatar name={event.leadBy.name} color={event.leadBy.avatarColor} size="sm" />
           {event.leadBy.name}
           {event.coLeads.length > 0 && <span className="text-zinc-400">+{event.coLeads.length}</span>}
