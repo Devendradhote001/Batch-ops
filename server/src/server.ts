@@ -1,9 +1,11 @@
 import { env } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
 import { createApp } from './app';
+import { ensureFirstAdmin } from './modules/users/bootstrapAdmin';
 
 async function main() {
   await connectDB();
+  await ensureFirstAdmin();
 
   const server = createApp().listen(env.PORT, () => {
     console.log(`API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);

@@ -1,0 +1,29 @@
+# Render Blueprint — one web service that serves both the API and the built app (same origin, so the
+# auth cookies stay first-party). Deploy: Render dashboard → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: batchops
+    runtime: node
+    plan: free
+    region: singapore
+    # Dev dependencies (TypeScript, Vite, tsup) are needed to build, even though NODE_ENV is production.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # paste your MongoDB Atlas connection string when prompted
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # The first admin is created on first start (only while the database has no admin at all).
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
