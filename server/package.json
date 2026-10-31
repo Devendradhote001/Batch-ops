@@ -8,8 +8,7 @@
     "build": "tsup",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx src/scripts/seedAdmin.ts",
-    "seed:demo": "tsx src/scripts/seedDemo.ts --reset"
+    "seed": "tsx src/scripts/seedAdmin.ts"
   },
   "dependencies": {
     "@batchops/shared": "*",

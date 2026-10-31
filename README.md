@@ -44,27 +44,13 @@ npm install
 cp server/.env.example server/.env    # then set the JWT secrets and admin credentials
 cp client/.env.example client/.env
 npm run seed                          # creates the first admin from ADMIN_EMAIL / ADMIN_PASSWORD
-npm run seed:demo                     # optional: realistic demo data (WIPES all data except the admin)
 npm run dev                           # API on :4000, web app on :5173
 ```
 
 Open http://localhost:5173 and sign in with the admin credentials from `server/.env`.
 
-### Demo data
-
-`npm run seed:demo` builds a vertical relative to today: 4 batches (3 active, 1 upcoming), every scheduled
-session since each batch started, ~30 days of daily updates (a few missed, today left open), events either
-side of today and an activity feed. It keeps your admin account and adds:
-
-| Name          | Email                 | Role       |
-| ------------- | --------------------- | ---------- |
-| Asha Verma    | `asha@batchops.dev`   | instructor |
-| Rahul Mehta   | `rahul@batchops.dev`  | instructor |
-| Priya Nair    | `priya@batchops.dev`  | instructor |
-| Sanjay Kapoor | `sanjay@batchops.dev` | viewer     |
-
-Password for all four: `Demo@1234` (override with `DEMO_PASSWORD`). The script refuses to run with
-`NODE_ENV=production`.
+Then add your team from **Admin → Users**, create batches, and start logging sessions — the dashboard and
+analytics fill in as you go.
 
 ### Scripts (run from the repo root)
 
@@ -72,7 +58,6 @@ Password for all four: `Demo@1234` (override with `DEMO_PASSWORD`). The script r
 | ------------------- | ------------------------------------------------------------------- |
 | `npm run dev`       | API (tsx watch) + Vite dev server                                   |
 | `npm run seed`      | Creates the first admin account (safe to re-run)                    |
-| `npm run seed:demo` | Resets the database to demo data (keeps the admin)                  |
 | `npm run typecheck` | Type-checks every workspace                                         |
 | `npm run build`     | Bundles the API (tsup) and builds the client (Vite)                 |
 | `npm start`         | Runs the built API; in production it also serves the built client   |
@@ -93,7 +78,6 @@ Password for all four: `Demo@1234` (override with `DEMO_PASSWORD`). The script r
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                       |                                                            |
 | `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | used by `npm run seed`                             |
 | `SERVE_CLIENT`           | `true` in production      | serve `client/dist` from the API                           |
-| `DEMO_PASSWORD`          | `Demo@1234`               | demo seed only                                             |
 
 `client/.env`: `VITE_API_URL` (default `/api`). Only change it if the API lives on a different origin.
 
@@ -124,7 +108,7 @@ server/src/
   modules/<feature>/   model · schema (Zod) · service · controller · routes
                        (auth, users, batches, sessions, updates, events, activity, dashboard, analytics)
   utils/               ApiError, response envelope, pagination, IST day helpers, password hashing
-  scripts/             seedAdmin, seedDemo
+  scripts/             seedAdmin (first admin account)
 client/src/
   components/ui/       Button, Input, Select, Modal, Card, Badge, StatCard, DataTable, EmptyState,
                        PageHeader, ConfirmDialog, Skeleton, Pagination…

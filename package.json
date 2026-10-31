@@ -13,8 +13,7 @@
     "build": "npm run build -w server && npm run build -w client",
     "start": "npm run start -w server",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "seed": "npm run seed -w server",
-    "seed:demo": "npm run seed:demo -w server"
+    "seed": "npm run seed -w server"
   },
   "devDependencies": {
     "concurrently": "^9.2.5"
