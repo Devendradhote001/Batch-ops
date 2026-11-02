@@ -30,6 +30,13 @@ export async function refresh(req: Request, res: Response) {
   }
 }
 
+export async function forgotPassword(req: Request, res: Response) {
+  await authService.requestPasswordReset(req.body.email);
+  sendSuccess(res, null, {
+    message: 'If that email has an account, your admin has been asked to reset its password.',
+  });
+}
+
 export async function logout(_req: Request, res: Response) {
   clearAuthCookies(res);
   sendSuccess(res, null, { message: 'Signed out' });

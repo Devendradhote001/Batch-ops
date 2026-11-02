@@ -28,6 +28,7 @@ export function UsersPage() {
   const me = useAuthUser();
   const [filters, setFilters] = useUrlFilters(FILTER_KEYS);
   const users = useUsers(filters);
+  const resetRequests = useUsers({ resetRequested: 'true' });
   const setStatus = useSetUserStatus();
 
   const [formState, setFormState] = useState<{ open: boolean; user?: PublicUser }>({ open: false });
@@ -63,6 +64,11 @@ export function UsersPage() {
               {u._id === me._id && <span className="ml-1.5 text-xs font-normal text-zinc-400">(you)</span>}
             </p>
             <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{u.email}</p>
+            {u.passwordResetRequestedAt && (
+              <Badge tone="warning" className="mt-1">
+                <KeyRound className="size-3" aria-hidden /> Reset requested
+              </Badge>
+            )}
             {/* On phones the role/status columns are hidden, so show them here. */}
             <div className="mt-1 flex gap-1.5 sm:hidden">
               <Badge tone={ROLE_TONES[u.role]}>{ROLE_LABELS[u.role]}</Badge>
@@ -143,6 +149,30 @@ export function UsersPage() {
           </Button>
         }
       />
+
+      {!!resetRequests.data?.items.length && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <KeyRound className="size-4 text-amber-600 dark:text-amber-400" aria-hidden />
+            {resetRequests.data.items.length === 1 ? '1 person is' : `${resetRequests.data.items.length} people are`} waiting for a
+            password reset
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+            Set a temporary password, share it with them privately, and they can change it from their profile.
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {resetRequests.data.items.map((u) => (
+              <li key={u._id}>
+                <Button variant="secondary" size="sm" onClick={() => setResetFor(u)}>
+                  <Avatar name={u.name} color={u.avatarColor} size="sm" />
+                  Reset {u.name}
+                  <span className="text-xs font-normal text-zinc-400">{dayjs(u.passwordResetRequestedAt).fromNow()}</span>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <SearchInput

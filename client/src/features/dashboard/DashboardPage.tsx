@@ -1,4 +1,4 @@
-import { Activity, ArrowRight, CalendarClock, CalendarDays, Layers, NotebookPen, Plus } from 'lucide-react';
+import { Activity, ArrowRight, CalendarClock, CalendarDays, KeyRound, Layers, NotebookPen, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
@@ -89,6 +89,20 @@ function DashboardContent({ data, onOpenEvent, sessionActions }: ContentProps) {
           </div>
           <Button size="sm" onClick={() => navigate(`/updates/${data.today}/edit`)}>
             File today's update
+          </Button>
+        </div>
+      )}
+
+      {isAdmin && !!data.passwordResetRequests && (
+        <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-amber-500/30 dark:bg-amber-500/10">
+          <div className="flex items-center gap-3">
+            <KeyRound className="size-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+            <p className="text-sm font-medium">
+              {data.passwordResetRequests === 1 ? 'Someone is' : `${data.passwordResetRequests} people are`} waiting for a password reset
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={() => navigate('/admin/users')}>
+            Review requests
           </Button>
         </div>
       )}

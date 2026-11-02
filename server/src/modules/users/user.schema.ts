@@ -34,6 +34,8 @@ export const listUsersQuery = paginationQuery.extend({
   q: searchParam,
   role: optionalParam(roleSchema),
   status: optionalParam(z.enum(['active', 'inactive'])),
+  /** Only users waiting for an admin to reset their password. */
+  resetRequested: optionalParam(z.enum(['true'])),
 });
 
 export const userOptionsQuery = z.object({

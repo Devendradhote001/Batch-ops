@@ -25,6 +25,8 @@ across instructors, with read-only analytics for senior management.
   session status, events by month and by leader, update consistency) over 7/30/90 days or a custom range,
   filterable by batch and instructor. Every chart also has a table view.
 - **Admin** — create instructor/viewer accounts (no public signup), edit roles, reset passwords, deactivate.
+- **Forgot password** — users request a reset from the login page; the admin sees it on the dashboard and in
+  *Admin → Users* and sets a temporary password. No email service needed, and a request never changes a password.
 - Light/dark mode, responsive down to phone width, keyboard-accessible dialogs.
 
 ## Stack
@@ -157,7 +159,7 @@ client/src/
 
 | Area      | Endpoints                                                                                                       | Access                                   |
 | --------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Auth      | `POST /api/auth/login` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password`                     | public / signed in                       |
+| Auth      | `POST /api/auth/login` · `POST /forgot-password` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password` | public / signed in                       |
 | Users     | `GET /api/users/options?roles=`                                                                                 | signed in                                |
 |           | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                    | admin                                    |
 | Batches   | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id` · `GET /api/batches/options`       | signed in (instructors: own)             |

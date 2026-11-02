@@ -14,6 +14,8 @@ const userSchema = new Schema(
     avatarColor: { type: String, default: randomAvatarColor },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date, default: null },
+    /** Set when the user asks for a reset from the login page; cleared once the password changes or they sign in. */
+    passwordResetRequestedAt: { type: Date, default: null },
     /** Bumped on password change/reset or deactivation to invalidate every issued token. */
     tokenVersion: { type: Number, default: 0, select: false },
   },
@@ -31,6 +33,7 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ passwordResetRequestedAt: 1 }, { sparse: true });
 
 export type UserAttrs = InferSchemaType<typeof userSchema>;
 export type UserDocument = HydratedDocument<UserAttrs>;

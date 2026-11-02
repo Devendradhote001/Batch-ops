@@ -31,6 +31,8 @@ export interface PublicUser {
   avatarColor: string;
   isActive: boolean;
   lastLoginAt?: string | null;
+  /** The user asked for a password reset and is waiting for an admin to set one. */
+  passwordResetRequestedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

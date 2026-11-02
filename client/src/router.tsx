@@ -15,6 +15,11 @@ export const router = createBrowserRouter(
   [
     { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage /> },
     {
+      path: '/forgot-password',
+      errorElement: <RouteErrorPage />,
+      lazy: () => import('@/features/auth/pages/ForgotPasswordPage').then((m) => ({ Component: m.ForgotPasswordPage })),
+    },
+    {
       element: <RequireAuth />,
       errorElement: <RouteErrorPage />,
       HydrateFallback: FullPageSpinner,

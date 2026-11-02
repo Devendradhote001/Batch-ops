@@ -15,6 +15,7 @@ export async function listUsers(query: ListUsersQuery) {
   const filter: Record<string, unknown> = {};
   if (query.role) filter.role = query.role;
   if (query.status) filter.isActive = query.status === 'active';
+  if (query.resetRequested) filter.passwordResetRequestedAt = { $ne: null };
   if (query.q) {
     const rx = new RegExp(escapeRegex(query.q), 'i');
     filter.$or = [{ name: rx }, { email: rx }];
@@ -111,6 +112,7 @@ export async function resetPassword(actor: AuthUser, id: string, password: strin
   const user = await findUserOr404(id);
   user.passwordHash = await hashPassword(password);
   user.tokenVersion += 1;
+  user.passwordResetRequestedAt = null;
   await user.save();
 
   await logActivity({

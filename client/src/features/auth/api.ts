@@ -49,6 +49,13 @@ export function useLogout() {
   });
 }
 
+/** Asks an admin to reset the password. Always "succeeds" — the server doesn't reveal whether the email exists. */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (email: string) => api.post('/auth/forgot-password', { email }),
+  });
+}
+
 export function useChangePassword() {
   const queryClient = useQueryClient();
   return useMutation({

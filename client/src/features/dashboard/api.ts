@@ -21,6 +21,8 @@ export interface Dashboard {
   todaysUpdate: { filed: boolean; status: UpdateStatus | null } | null;
   recentUpdates: DailyUpdate[] | null;
   recentActivity: ActivityItem[] | null;
+  /** Admin only: users waiting for a password reset. */
+  passwordResetRequests: number | null;
 }
 
 export function useDashboard() {

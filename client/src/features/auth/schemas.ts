@@ -5,6 +5,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.email('Enter a valid email address'),
+});
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required'),
@@ -21,4 +25,5 @@ export const changePasswordSchema = z
   });
 
 export type LoginValues = z.infer<typeof loginSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;

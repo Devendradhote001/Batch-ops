@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useNavigate, type Location } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, type Location } from 'react-router-dom';
 import { BrandMark } from '@/components/BrandMark';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -27,6 +27,7 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } });
 
@@ -90,6 +91,15 @@ export function LoginPage() {
                   </button>
                 </div>
               </Field>
+              <div className="-mt-2 text-right">
+                <Link
+                  to="/forgot-password"
+                  state={{ email: getValues('email') }}
+                  className="text-xs font-medium text-accent-700 hover:underline dark:text-accent-300"
+                >
+                  Forgot password?
+                </Link>
+              </div>
 
               <Button type="submit" className="w-full" loading={login.isPending}>
                 Sign in

@@ -6,6 +6,7 @@ import { listEvents } from '../events/event.service';
 import { listSessions } from '../sessions/session.service';
 import { DailyUpdate } from '../updates/update.model';
 import { listUpdates } from '../updates/update.service';
+import { User } from '../users/user.model';
 
 /**
  * "Today at a glance" in one request. Built on the same scoped list services as the rest of the API,
@@ -15,13 +16,14 @@ export async function getDashboard(user: AuthUser) {
   const today = todayIST();
   const canSeeUpdates = user.role !== 'instructor';
 
-  const [sessionsToday, activeBatches, upcomingEvents, todaysUpdate, recentUpdates, recentActivity] = await Promise.all([
+  const [sessionsToday, activeBatches, upcomingEvents, todaysUpdate, recentUpdates, recentActivity, resetRequests] = await Promise.all([
     listSessions(user, { day: today, page: 1, limit: 50 }),
     listBatches(user, { status: 'active', archived: 'false', page: 1, limit: 6 }),
     listEvents(user, { from: today, to: addDays(today, 7), status: 'planned', sort: 'asc', page: 1, limit: 6 }),
     canSeeUpdates ? DailyUpdate.findOne({ day: today }).select('day status').lean() : null,
     canSeeUpdates ? listUpdates({ page: 1, limit: 5 }) : null,
     canSeeUpdates ? listRecentActivity(12) : null,
+    user.role === 'admin' ? User.countDocuments({ passwordResetRequestedAt: { $ne: null }, isActive: true }) : null,
   ]);
 
   return {
@@ -32,5 +34,7 @@ export async function getDashboard(user: AuthUser) {
     todaysUpdate: canSeeUpdates ? { filed: !!todaysUpdate, status: todaysUpdate?.status ?? null } : null,
     recentUpdates: recentUpdates?.items ?? null,
     recentActivity,
+    /** Admin only: people waiting for a password reset. */
+    passwordResetRequests: resetRequests,
   };
 }

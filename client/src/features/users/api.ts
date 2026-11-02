@@ -8,6 +8,7 @@ export interface UserListParams {
   q?: string;
   role?: string;
   status?: string;
+  resetRequested?: 'true';
   page?: number;
 }
 
@@ -67,8 +68,12 @@ export function useSetUserStatus() {
 }
 
 export function useResetPassword() {
+  const invalidate = useInvalidateUsers();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, password }: { id: string; password: string }) =>
       unwrap<PublicUser>(api.post(`/admin/users/${id}/reset-password`, { password })),
+    // Clears the user's pending reset request, so refresh the lists and the dashboard alert.
+    onSuccess: () => Promise.all([invalidate(), queryClient.invalidateQueries({ queryKey: ['dashboard'] })]),
   });
 }
