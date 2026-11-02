@@ -13,8 +13,8 @@ import { useCurrentUser, useRequestPasswordReset } from '../api';
 import { forgotPasswordSchema, type ForgotPasswordValues } from '../schemas';
 
 /**
- * "Forgot password": the request goes to the admin, who sets a temporary password from Admin → Users.
- * No email service needed, and nobody can change a password just by knowing an email address.
+ * "Forgot password". The server either emails a single-use reset link or, when email isn't set up, asks the admin
+ * to set a temporary password. Either way, nobody can change a password just by knowing an email address.
  */
 export function ForgotPasswordPage() {
   useDocumentTitle('Forgot password');
@@ -40,9 +40,7 @@ export function ForgotPasswordPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <BrandMark className="size-10" />
           <h1 className="mt-5 text-xl font-semibold tracking-tight">Forgot your password?</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Your admin will set a temporary password and share it with you.
-          </p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Enter your account email and we'll help you get back in.</p>
         </div>
 
         <Card>
@@ -51,11 +49,21 @@ export function ForgotPasswordPage() {
               <div className="space-y-4 text-center" role="status">
                 <MailCheck className="mx-auto size-8 text-emerald-600 dark:text-emerald-400" aria-hidden />
                 <div className="space-y-1">
-                  <p className="font-medium">Request sent</p>
+                  <p className="font-medium">{request.data.mode === 'email' ? 'Check your email' : 'Request sent'}</p>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    If <span className="font-medium text-zinc-700 dark:text-zinc-300">{getValues('email')}</span> has an
-                    account, your admin can now see the request. Once they give you a temporary password, sign in and
-                    change it from your profile.
+                    {request.data.mode === 'email' ? (
+                      <>
+                        If <span className="font-medium text-zinc-700 dark:text-zinc-300">{getValues('email')}</span> has an
+                        account, we've sent it a link to set a new password. It expires in 30 minutes — check spam if you
+                        don't see it.
+                      </>
+                    ) : (
+                      <>
+                        If <span className="font-medium text-zinc-700 dark:text-zinc-300">{getValues('email')}</span> has an
+                        account, your admin can now see the request. Once they give you a temporary password, sign in and
+                        change it from your profile.
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -82,7 +90,7 @@ export function ForgotPasswordPage() {
                   />
                 </Field>
                 <Button type="submit" className="w-full" loading={request.isPending}>
-                  Request reset
+                  Send reset link
                 </Button>
               </form>
             )}

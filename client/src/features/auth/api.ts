@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import type { PublicUser } from '@batchops/shared';
+import type { ApiSuccess, PublicUser } from '@batchops/shared';
 import { api, unwrap } from '@/lib/api';
 import { queryKeys } from '@/lib/queryClient';
 import type { ChangePasswordValues, LoginValues } from './schemas';
@@ -49,10 +49,23 @@ export function useLogout() {
   });
 }
 
-/** Asks an admin to reset the password. Always "succeeds" — the server doesn't reveal whether the email exists. */
+/**
+ * "Forgot password". Always "succeeds" — the server doesn't reveal whether the email exists. Resolves to the
+ * server's message, which says whether a link was emailed or the admin was asked.
+ */
 export function useRequestPasswordReset() {
   return useMutation({
-    mutationFn: (email: string) => api.post('/auth/forgot-password', { email }),
+    mutationFn: async (email: string) => {
+      const { data } = await api.post<ApiSuccess<{ mode: 'email' | 'admin' }>>('/auth/forgot-password', { email });
+      return { mode: data.data.mode, message: data.message ?? '' };
+    },
+  });
+}
+
+/** Sets a new password from the emailed link. */
+export function useResetPasswordWithToken() {
+  return useMutation({
+    mutationFn: (values: { token: string; password: string }) => api.post('/auth/reset-password', values),
   });
 }
 

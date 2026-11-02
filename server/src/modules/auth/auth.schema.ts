@@ -11,6 +11,11 @@ const emailSchema = z.string().trim().toLowerCase().pipe(z.email('Enter a valid 
 
 export const forgotPasswordSchema = z.object({ email: emailSchema });
 
+export const resetPasswordWithTokenSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{32,128}$/, 'This reset link is invalid'),
+  password: passwordSchema,
+});
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Password is required'),
@@ -28,3 +33,4 @@ export const changePasswordSchema = z
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ResetPasswordWithTokenInput = z.infer<typeof resetPasswordWithTokenSchema>;

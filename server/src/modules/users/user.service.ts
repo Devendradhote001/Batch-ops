@@ -112,7 +112,7 @@ export async function resetPassword(actor: AuthUser, id: string, password: strin
   const user = await findUserOr404(id);
   user.passwordHash = await hashPassword(password);
   user.tokenVersion += 1;
-  user.passwordResetRequestedAt = null;
+  user.set({ passwordResetRequestedAt: null, passwordResetTokenHash: null, passwordResetExpiresAt: null });
   await user.save();
 
   await logActivity({

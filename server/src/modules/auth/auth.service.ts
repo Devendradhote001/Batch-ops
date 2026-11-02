@@ -1,9 +1,16 @@
+import { createHash, randomBytes } from 'node:crypto';
+import { env } from '../../config/env';
+import { ApiError } from '../../utils/ApiError';
+import { emailEnabled, passwordResetEmail, sendEmail } from '../../utils/mailer';
+import { burnPasswordCheck, hashPassword, verifyPassword } from '../../utils/password';
 import { logActivity } from '../activity/activity.service';
 import { User, type UserDocument } from '../users/user.model';
-import { ApiError } from '../../utils/ApiError';
-import { burnPasswordCheck, hashPassword, verifyPassword } from '../../utils/password';
 import { verifyRefreshToken } from './auth.tokens';
-import type { ChangePasswordInput, LoginInput } from './auth.schema';
+import type { ChangePasswordInput, LoginInput, ResetPasswordWithTokenInput } from './auth.schema';
+
+const RESET_LINK_TTL_MINUTES = 30;
+
+const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
 const INVALID_CREDENTIALS = () => ApiError.unauthorized('Invalid email or password', 'INVALID_CREDENTIALS');
 
@@ -27,13 +34,35 @@ export async function login({ email, password }: LoginInput): Promise<UserDocume
 }
 
 /**
- * "Forgot password": records the request so an admin can set a temporary password from Admin → Users.
- * It never changes the password itself (anyone can call this), and the response is the same whether or not
+ * "Forgot password". With email configured, sends a single-use link that expires in 30 minutes. Without it,
+ * records the request so an admin can set a temporary password from Admin → Users.
+ * It never changes a password itself (anyone can call this), and the caller gets the same answer whether or not
  * the email has an account, so it can't be used to discover who's registered.
+ * Returns how the request is handled, for the response message.
  */
-export async function requestPasswordReset(email: string): Promise<void> {
+export async function requestPasswordReset(email: string): Promise<'email' | 'admin'> {
+  const mode = emailEnabled ? 'email' : 'admin';
   const user = await User.findOne({ email, isActive: true });
-  if (!user) return;
+  if (!user) return mode;
+
+  if (mode === 'email') {
+    // URL-safe, 256 bits. Only its hash is stored; a new request replaces any earlier link.
+    const token = randomBytes(32).toString('base64url');
+    user.set({
+      passwordResetTokenHash: hashToken(token),
+      passwordResetExpiresAt: new Date(Date.now() + RESET_LINK_TTL_MINUTES * 60_000),
+    });
+    await user.save();
+
+    const link = `${env.appUrl}/reset-password?token=${token}`;
+    try {
+      await sendEmail(passwordResetEmail({ name: user.name, email: user.email, link, minutes: RESET_LINK_TTL_MINUTES }));
+    } catch (err) {
+      // Don't tell the caller (it would reveal the account exists); make it visible to whoever runs the server.
+      console.error(`Password reset email to ${user.email} failed:`, err instanceof Error ? err.message : err);
+    }
+    return mode;
+  }
 
   const alreadyPending = !!user.passwordResetRequestedAt;
   user.passwordResetRequestedAt = new Date();
@@ -48,6 +77,36 @@ export async function requestPasswordReset(email: string): Promise<void> {
       summary: `${user.name} asked for a password reset`,
     });
   }
+  return mode;
+}
+
+/** Sets a new password from an emailed link. The link is single-use and signs the account out everywhere. */
+export async function resetPasswordWithToken({ token, password }: ResetPasswordWithTokenInput): Promise<void> {
+  const user = await User.findOne({
+    passwordResetTokenHash: hashToken(token),
+    passwordResetExpiresAt: { $gt: new Date() },
+    isActive: true,
+  }).select('+tokenVersion');
+  if (!user) {
+    throw new ApiError(400, 'INVALID_RESET_LINK', 'This reset link is invalid or has expired. Request a new one.');
+  }
+
+  user.set({
+    passwordHash: await hashPassword(password),
+    tokenVersion: user.tokenVersion + 1,
+    passwordResetTokenHash: null,
+    passwordResetExpiresAt: null,
+    passwordResetRequestedAt: null,
+  });
+  await user.save();
+
+  await logActivity({
+    actor: { id: user.id, role: user.role, name: user.name, email: user.email },
+    action: 'password-reset',
+    entity: 'user',
+    entityId: user._id,
+    summary: `${user.name} reset their password from an email link`,
+  });
 }
 
 /** Validates a refresh token against the user's current state and returns the user to re-issue tokens for. */
@@ -81,7 +140,7 @@ export async function changePassword(
 
   user.passwordHash = await hashPassword(newPassword);
   user.tokenVersion += 1;
-  user.passwordResetRequestedAt = null;
+  user.set({ passwordResetRequestedAt: null, passwordResetTokenHash: null, passwordResetExpiresAt: null });
   await user.save();
   return user;
 }

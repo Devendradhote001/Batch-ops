@@ -25,8 +25,9 @@ across instructors, with read-only analytics for senior management.
   session status, events by month and by leader, update consistency) over 7/30/90 days or a custom range,
   filterable by batch and instructor. Every chart also has a table view.
 - **Admin** — create instructor/viewer accounts (no public signup), edit roles, reset passwords, deactivate.
-- **Forgot password** — users request a reset from the login page; the admin sees it on the dashboard and in
-  *Admin → Users* and sets a temporary password. No email service needed, and a request never changes a password.
+- **Forgot password** — "Forgot password?" on the login page emails a single-use link (expires in 30 minutes)
+  to set a new password. Without email configured, the request goes to the admin instead, who sets a temporary
+  password from *Admin → Users*. Either way a request alone never changes a password.
 - Light/dark mode, responsive down to phone width, keyboard-accessible dialogs.
 
 ## Stack
@@ -80,6 +81,10 @@ analytics fill in as you go.
 | `ACCESS_TOKEN_TTL_MIN`   | `15`                      |                                                            |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                       |                                                            |
 | `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | used by `npm run seed`                             |
+| `EMAIL_PROVIDER`         | —                         | `brevo` to email reset links, `log` to print them (dev); unset = admin handles resets |
+| `BREVO_API_KEY`          | —                         | Brevo → SMTP & API → API keys (needed for `brevo`)          |
+| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | — / `BatchOps` | sender; must be verified in Brevo → Senders                |
+| `APP_URL`                | first `CLIENT_ORIGIN`     | public web-app URL used in emailed links                   |
 | `SERVE_CLIENT`           | when a build exists       | serve `client/dist` from the API (`false` to turn off)     |
 
 `client/.env`: `VITE_API_URL` (default `/api`). Only change it if the API lives on a different origin.
@@ -159,7 +164,7 @@ client/src/
 
 | Area      | Endpoints                                                                                                       | Access                                   |
 | --------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Auth      | `POST /api/auth/login` · `POST /forgot-password` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password` | public / signed in                       |
+| Auth      | `POST /api/auth/login` · `POST /forgot-password` · `POST /reset-password` · `POST /refresh` · `POST /logout` · `GET /me` · `PATCH /me/password` | public / signed in                       |
 | Users     | `GET /api/users/options?roles=`                                                                                 | signed in                                |
 |           | `GET/POST /api/admin/users` · `PATCH /:id` · `PATCH /:id/status` · `POST /:id/reset-password`                    | admin                                    |
 | Batches   | `GET /api/batches?q&status&instructor&archived&page` · `GET /api/batches/:id` · `GET /api/batches/options`       | signed in (instructors: own)             |
@@ -211,6 +216,9 @@ client/src/
   pre-paint theme script is a file).
 
 ## Troubleshooting
+
+- **Reset emails don't arrive** — check the server log for `Password reset email … failed` (Brevo's reason is
+  included). Common causes: the sender isn't verified in Brevo, a wrong `BREVO_API_KEY`, or the email is in spam.
 
 - **Forgot the admin password** — passwords are stored as one-way hashes and can't be recovered. Run
   `npm run reset-password` from the repo root; it uses `MONGODB_URI` from `server/.env`, so point that at the
