@@ -27,13 +27,13 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      # Password-reset emails (optional — leave EMAIL_PROVIDER empty and reset requests go to the admin).
-      # Set it to "brevo" only once BREVO_API_KEY and a verified MAIL_FROM_EMAIL are filled in.
+      # Password-reset emails via SMTP (optional — leave EMAIL_PROVIDER empty and reset requests go to the admin).
+      # Set it to "smtp" once SMTP_USER and SMTP_PASS are filled in (Gmail: your address + an App Password).
       - key: EMAIL_PROVIDER
         sync: false
-      - key: BREVO_API_KEY
+      - key: SMTP_USER
         sync: false
-      - key: MAIL_FROM_EMAIL
+      - key: SMTP_PASS
         sync: false
       - key: APP_URL
         value: https://batch-ops-sigma.vercel.app

@@ -2,6 +2,7 @@ import { env } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
 import { createApp } from './app';
 import { ensureFirstAdmin } from './modules/users/bootstrapAdmin';
+import { checkEmailSetup } from './utils/mailer';
 
 async function main() {
   // Render sets RENDER=true. Without NODE_ENV=production cookies aren't marked Secure and logs are verbose.
@@ -13,6 +14,7 @@ async function main() {
 
   const server = createApp().listen(env.PORT, () => {
     console.log(`API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
+    void checkEmailSetup();
   });
 
   const shutdown = (signal: string) => {

@@ -81,9 +81,10 @@ analytics fill in as you go.
 | `ACCESS_TOKEN_TTL_MIN`   | `15`                      |                                                            |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                       |                                                            |
 | `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | used by `npm run seed`                             |
-| `EMAIL_PROVIDER`         | —                         | `brevo` to email reset links, `log` to print them (dev); unset = admin handles resets |
-| `BREVO_API_KEY`          | —                         | Brevo → SMTP & API → API keys (needed for `brevo`)          |
-| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | — / `BatchOps` | sender; must be verified in Brevo → Senders                |
+| `EMAIL_PROVIDER`         | —                         | `smtp` to email reset links (nodemailer), `log` to print them (dev); unset = admin handles resets |
+| `SMTP_HOST` / `SMTP_PORT`| `smtp.gmail.com` / `465`  | any SMTP server; port 465 uses TLS, 587 uses STARTTLS (`SMTP_SECURE` overrides) |
+| `SMTP_USER` / `SMTP_PASS`| —                         | for Gmail: your address + an App Password (needs 2-Step Verification) |
+| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `SMTP_USER` / `BatchOps` | sender shown on emails                      |
 | `APP_URL`                | first `CLIENT_ORIGIN`     | public web-app URL used in emailed links                   |
 | `SERVE_CLIENT`           | when a build exists       | serve `client/dist` from the API (`false` to turn off)     |
 
@@ -217,8 +218,10 @@ client/src/
 
 ## Troubleshooting
 
-- **Reset emails don't arrive** — check the server log for `Password reset email … failed` (Brevo's reason is
-  included). Common causes: the sender isn't verified in Brevo, a wrong `BREVO_API_KEY`, or the email is in spam.
+- **Reset emails don't arrive** — the startup log says `Email: SMTP ready` or `Email: SMTP failed — <reason>`, and
+  each failed send logs `Password reset email … failed`. Gmail needs an App Password, not your normal password. A
+  timeout usually means the host blocks outgoing SMTP (some free plans do): try `SMTP_PORT=587`, or another
+  host/plan. Also check the recipient's spam folder.
 
 - **Forgot the admin password** — passwords are stored as one-way hashes and can't be recovered. Run
   `npm run reset-password` from the repo root; it uses `MONGODB_URI` from `server/.env`, so point that at the

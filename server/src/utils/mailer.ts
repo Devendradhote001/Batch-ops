@@ -1,3 +1,4 @@
+import nodemailer, { type Transporter } from 'nodemailer';
 import { env } from '../config/env';
 
 export interface Email {
@@ -10,10 +11,27 @@ export interface Email {
 /** Whether the server can send email at all. When false, features fall back to non-email flows. */
 export const emailEnabled = !!env.EMAIL_PROVIDER;
 
-const SEND_TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 10_000;
+
+let transporter: Transporter | undefined;
+
+/** One pooled SMTP connection, created on first use. */
+function smtpTransport(): Transporter {
+  transporter ??= nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE ? env.SMTP_SECURE === 'true' : env.SMTP_PORT === 465,
+    auth: { user: env.SMTP_USER!, pass: env.SMTP_PASS! },
+    pool: true,
+    connectionTimeout: TIMEOUT_MS,
+    greetingTimeout: TIMEOUT_MS,
+    socketTimeout: TIMEOUT_MS * 2,
+  });
+  return transporter;
+}
 
 /**
- * Sends one email. Brevo is used over its HTTPS API (not SMTP), which works on hosts that block SMTP ports.
+ * Sends one email over SMTP with nodemailer (works with Gmail App Passwords or any SMTP provider).
  * The 'log' provider prints the email instead — for local development without an email account.
  */
 export async function sendEmail(email: Email): Promise<void> {
@@ -21,23 +39,40 @@ export async function sendEmail(email: Email): Promise<void> {
     console.log(`\n--- email (EMAIL_PROVIDER=log) ---\nTo: ${email.to.email}\nSubject: ${email.subject}\n\n${email.text}\n---------------------------------\n`);
     return;
   }
-  if (env.EMAIL_PROVIDER !== 'brevo') throw new Error('Email is not configured (EMAIL_PROVIDER is unset)');
+  if (env.EMAIL_PROVIDER !== 'smtp') throw new Error('Email is not configured (EMAIL_PROVIDER is unset)');
 
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'api-key': env.BREVO_API_KEY!, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({
-      sender: { email: env.MAIL_FROM_EMAIL, name: env.MAIL_FROM_NAME },
-      to: [email.to],
-      subject: email.subject,
-      htmlContent: email.html,
-      textContent: email.text,
-    }),
-    signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+  await smtpTransport().sendMail({
+    from: { name: env.MAIL_FROM_NAME, address: env.MAIL_FROM_EMAIL ?? env.SMTP_USER! },
+    to: email.to.name ? { name: email.to.name, address: email.to.email } : email.to.email,
+    subject: email.subject,
+    text: email.text,
+    html: email.html,
   });
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`Brevo rejected the email (${response.status}): ${detail.slice(0, 300)}`);
+}
+
+/**
+ * Logs on startup whether the SMTP login works, so a wrong password or a host that blocks SMTP shows up in the
+ * deploy log instead of as silently missing emails. Never throws.
+ */
+export async function checkEmailSetup(): Promise<void> {
+  if (env.EMAIL_PROVIDER === 'log') {
+    console.log('Email: EMAIL_PROVIDER=log — reset emails are printed here, not sent.');
+    return;
+  }
+  if (env.EMAIL_PROVIDER !== 'smtp') {
+    console.log('Email: not configured — "forgot password" requests go to an admin.');
+    return;
+  }
+  try {
+    await smtpTransport().verify();
+    console.log(`Email: SMTP ready (${env.SMTP_USER} via ${env.SMTP_HOST}:${env.SMTP_PORT}).`);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(
+      `Email: SMTP failed (${env.SMTP_HOST}:${env.SMTP_PORT}) — ${reason}\n` +
+        '  Gmail: use an App Password (needs 2-Step Verification), not your normal password.\n' +
+        '  A timeout usually means this host blocks outgoing SMTP; try SMTP_PORT=587 or another host/plan.',
+    );
   }
 }
 

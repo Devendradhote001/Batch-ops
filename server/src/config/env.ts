@@ -16,11 +16,18 @@ const envSchema = z.object({
   /** Serve the built client (client/dist) from this server. Default: whenever a build exists. */
   SERVE_CLIENT: z.enum(['true', 'false']).optional(),
   /**
-   * How password-reset emails are sent: 'brevo' (HTTPS API) or 'log' (print to the server log, for local dev).
-   * Unset = no email; "forgot password" requests then go to an admin instead.
+   * How password-reset emails are sent: 'smtp' (nodemailer, e.g. Gmail) or 'log' (print to the server log, for
+   * local dev). Unset = no email; "forgot password" requests then go to an admin instead.
    */
-  EMAIL_PROVIDER: z.enum(['brevo', 'log']).optional(),
-  BREVO_API_KEY: z.string().optional(),
+  EMAIL_PROVIDER: z.enum(['smtp', 'log']).optional(),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  /** TLS from the first byte (port 465). Defaults to true on 465, false (STARTTLS) otherwise. */
+  SMTP_SECURE: z.enum(['true', 'false']).optional(),
+  SMTP_USER: z.string().optional(),
+  /** For Gmail this is an App Password (Google Account → Security → App passwords), not your normal password. */
+  SMTP_PASS: z.string().optional(),
+  /** Sender address. Defaults to SMTP_USER (Gmail rewrites other senders to the account anyway). */
   MAIL_FROM_EMAIL: z.string().optional(),
   MAIL_FROM_NAME: z.string().default('BatchOps'),
   /** Public URL of the web app, used in emailed links. Defaults to the first CLIENT_ORIGIN. */
@@ -34,9 +41,9 @@ const envSchema = z.object({
     path: ['JWT_REFRESH_SECRET'],
     message: 'Access and refresh secrets must differ',
   })
-  .refine((e) => e.EMAIL_PROVIDER !== 'brevo' || (e.BREVO_API_KEY && e.MAIL_FROM_EMAIL), {
-    path: ['BREVO_API_KEY'],
-    message: 'EMAIL_PROVIDER=brevo needs BREVO_API_KEY and MAIL_FROM_EMAIL (a sender verified in Brevo)',
+  .refine((e) => e.EMAIL_PROVIDER !== 'smtp' || (e.SMTP_USER && e.SMTP_PASS), {
+    path: ['SMTP_USER'],
+    message: 'EMAIL_PROVIDER=smtp needs SMTP_USER and SMTP_PASS (for Gmail: your address and an App Password)',
   });
 
 const parsed = envSchema.safeParse(process.env);
