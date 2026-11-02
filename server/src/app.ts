@@ -22,7 +22,7 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
   app.use('/api', apiRouter);
-  if (env.serveClient) serveClient(app);
+  if (env.serveClient !== false) serveClient(app);
 
   app.use(notFound);
   app.use(errorHandler);
@@ -38,9 +38,13 @@ function serveClient(app: express.Express) {
   const clientDist = fileURLToPath(new URL('../../client/dist', import.meta.url));
   const indexHtml = `${clientDist}/index.html`;
   if (!existsSync(indexHtml)) {
-    console.warn(`SERVE_CLIENT is on but ${indexHtml} is missing — run "npm run build" first.`);
+    // In development the Vite dev server serves the app, so a missing build is expected there.
+    if (env.serveClient === true || env.isProduction) {
+      console.warn(`Not serving the web app: ${indexHtml} is missing. Run "npm run build" (it builds client and server).`);
+    }
     return;
   }
+  console.log(`Serving the web app from ${clientDist}`);
 
   // Hashed assets never change, so cache them for a year; everything else revalidates.
   app.use('/assets', express.static(`${clientDist}/assets`, { immutable: true, maxAge: '1y', index: false }));

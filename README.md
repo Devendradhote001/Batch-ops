@@ -78,7 +78,7 @@ analytics fill in as you go.
 | `ACCESS_TOKEN_TTL_MIN`   | `15`                      |                                                            |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                       |                                                            |
 | `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | used by `npm run seed`                             |
-| `SERVE_CLIENT`           | `true` in production      | serve `client/dist` from the API                           |
+| `SERVE_CLIENT`           | when a build exists       | serve `client/dist` from the API (`false` to turn off)     |
 
 `client/.env`: `VITE_API_URL` (default `/api`). Only change it if the API lives on a different origin.
 

@@ -13,7 +13,7 @@ const envSchema = z.object({
   ADMIN_NAME: z.string().default('Vertical Lead'),
   ADMIN_EMAIL: z.string().optional(),
   ADMIN_PASSWORD: z.string().optional(),
-  /** Serve the built client (client/dist) from this server. Defaults to on in production. */
+  /** Serve the built client (client/dist) from this server. Default: whenever a build exists. */
   SERVE_CLIENT: z.enum(['true', 'false']).optional(),
 })
   .refine(
@@ -38,6 +38,7 @@ if (!parsed.success) {
 export const env = {
   ...parsed.data,
   isProduction: parsed.data.NODE_ENV === 'production',
-  serveClient: parsed.data.SERVE_CLIENT ? parsed.data.SERVE_CLIENT === 'true' : parsed.data.NODE_ENV === 'production',
+  /** 'auto' serves client/dist when it has been built, so a host missing NODE_ENV still gets the website. */
+  serveClient: parsed.data.SERVE_CLIENT === undefined ? ('auto' as const) : parsed.data.SERVE_CLIENT === 'true',
   clientOrigins: parsed.data.CLIENT_ORIGIN.split(',').map((origin) => origin.trim()),
 };

@@ -4,6 +4,10 @@ import { createApp } from './app';
 import { ensureFirstAdmin } from './modules/users/bootstrapAdmin';
 
 async function main() {
+  // Render sets RENDER=true. Without NODE_ENV=production cookies aren't marked Secure and logs are verbose.
+  if (process.env.RENDER && !env.isProduction) {
+    console.warn('NODE_ENV is not "production" — add NODE_ENV=production in the Render service\'s Environment tab.');
+  }
   await connectDB();
   await ensureFirstAdmin();
 
