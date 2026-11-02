@@ -58,6 +58,7 @@ analytics fill in as you go.
 | ------------------- | ------------------------------------------------------------------- |
 | `npm run dev`       | API (tsx watch) + Vite dev server                                   |
 | `npm run seed`      | Creates the first admin account (safe to re-run)                    |
+| `npm run reset-password` | Sets a new password for any account (asks for email + hidden password) |
 | `npm run typecheck` | Type-checks every workspace                                         |
 | `npm run build`     | Bundles the API (tsup) and builds the client (Vite)                 |
 | `npm start`         | Runs the built API; in production it also serves the built client   |
@@ -199,6 +200,10 @@ client/src/
   pre-paint theme script is a file).
 
 ## Troubleshooting
+
+- **Forgot the admin password** — passwords are stored as one-way hashes and can't be recovered. Run
+  `npm run reset-password` from the repo root; it uses `MONGODB_URI` from `server/.env`, so point that at the
+  database you want to change (local or Atlas). It signs the account out everywhere.
 
 - **The server exits on start** — read the message: it lists each invalid env variable.
 - **Login works but you're immediately signed out** — the API and app must share an origin (use the Vite dev
