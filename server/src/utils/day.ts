@@ -40,6 +40,16 @@ export function daysBetween(from: string, to: string): number {
   return dayjs(to).diff(dayjs(from), 'day');
 }
 
+/** The current moment in IST, formatted (e.g. for "generated at" stamps). */
+export function formatNowIST(format = 'D MMM YYYY, h:mm A'): string {
+  return dayjs().tz(APP_TIMEZONE).format(format);
+}
+
+/** A YYYY-MM-DD day formatted for people, e.g. "3 Nov 2026". */
+export function formatDay(day: string, format = 'D MMM YYYY'): string {
+  return dayjs(day).format(format);
+}
+
 /** "31 Oct" — for human-readable activity summaries. */
 export function formatDayShort(day: string): string {
   return dayjs(day).format('D MMM');

@@ -17,6 +17,7 @@ import { SessionStatusChart } from '../charts/SessionStatusChart';
 import { UpdateConsistencyCard } from '../charts/UpdateConsistencyCard';
 import { WeeklyLineChart } from '../charts/WeeklyLineChart';
 import { WorkloadChart } from '../charts/WorkloadChart';
+import { ExportMenu } from '../components/ExportMenu';
 
 const FILTER_KEYS = ['range', 'from', 'to', 'batch', 'instructor'] as const;
 const PRESETS = [
@@ -58,6 +59,7 @@ export function AnalyticsPage() {
             ? 'Your own teaching numbers.'
             : `${dayjs(params.from).format('D MMM')} – ${dayjs(params.to).format('D MMM YYYY')} across the vertical.`
         }
+        actions={!isInstructor && <ExportMenu params={params} />}
       />
 
       {/* Filters: one row above all charts. */}

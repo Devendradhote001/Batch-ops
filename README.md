@@ -24,6 +24,9 @@ across instructors, with read-only analytics for senior management.
 - **Analytics** — KPIs and eight charts (progress, sessions and attendance over time, instructor workload,
   session status, events by month and by leader, update consistency) over 7/30/90 days or a custom range,
   filterable by batch and instructor. Every chart also has a table view.
+- **Export** — from Analytics, download the selected range and filters as an **Excel workbook** (Summary, Batches,
+  Sessions, Instructors, Events, Daily updates — filterable sheets with real dates and %) or a **PDF summary** to
+  share. Admins and viewers.
 - **Admin** — create instructor/viewer accounts (no public signup), edit roles, reset passwords, deactivate.
 - **Forgot password** — "Forgot password?" on the login page emails a single-use link (expires in 30 minutes)
   to set a new password. Without email configured, the request goes to the admin instead, who sets a temporary
@@ -176,6 +179,7 @@ client/src/
 |           | `PUT /api/updates/:day` (upsert — one update per IST day)                                                       | admin                                    |
 | Events    | `GET /api/events?from&to&type&status&batch&leader&sort&page` · `GET /:id`                                       | signed in (instructors: led/co-led)      |
 |           | `POST /api/admin/events` · `PUT /:id` · `PATCH /:id/complete` · `DELETE /:id`                                   | admin                                    |
+| Reports   | `GET /api/reports/xlsx` · `GET /api/reports/pdf` — same `from&to&batch&instructor` as analytics                 | admin, viewer                            |
 | Dashboard | `GET /api/dashboard`                                                                                            | signed in (role-aware)                   |
 | Analytics | `GET /api/analytics/{kpis,batch-progress,sessions-over-time,instructor-workload,attendance-trend,session-status,events}` | signed in (instructors: own numbers) |
 |           | `GET /api/analytics/update-consistency` — all take `from&to&batch&instructor`                                  | admin, viewer                            |

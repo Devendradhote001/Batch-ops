@@ -7,6 +7,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { adminBatchRoutes, batchRoutes } from './modules/batches/batch.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { adminEventRoutes, eventRoutes } from './modules/events/event.routes';
+import { reportRoutes } from './modules/reports/report.routes';
 import { sessionRoutes } from './modules/sessions/session.routes';
 import { updateRoutes } from './modules/updates/update.routes';
 import { adminUserRoutes, userRoutes } from './modules/users/user.routes';
@@ -32,6 +33,7 @@ apiRouter.use('/updates', authenticate, updateRoutes);
 apiRouter.use('/events', authenticate, eventRoutes);
 apiRouter.use('/dashboard', authenticate, dashboardRoutes);
 apiRouter.use('/analytics', authenticate, analyticsRoutes);
+apiRouter.use('/reports', authenticate, reportRoutes);
 
 /** Everything under /api/admin requires an authenticated admin. */
 const adminRouter = Router();

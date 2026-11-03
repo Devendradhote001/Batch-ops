@@ -22,7 +22,7 @@ export function scopeFilters(user: AuthUser, filters: AnalyticsFilters): Analyti
   return user.role === 'instructor' ? { ...filters, instructor: user.id } : filters;
 }
 
-function sessionMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) {
+export function sessionMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) {
   return {
     day: { $gte: f.from, $lte: f.to },
     ...(f.batch && { batch: oid(f.batch) }),
@@ -31,7 +31,7 @@ function sessionMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) 
   };
 }
 
-function eventMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) {
+export function eventMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) {
   return {
     day: { $gte: f.from, $lte: f.to },
     ...(f.batch && { batches: oid(f.batch) }),
@@ -40,7 +40,7 @@ function eventMatch(f: AnalyticsFilters, extra: Record<string, unknown> = {}) {
   };
 }
 
-function batchMatch(f: AnalyticsFilters) {
+export function batchMatch(f: AnalyticsFilters) {
   return {
     isArchived: false,
     ...(f.batch && { _id: oid(f.batch) }),
